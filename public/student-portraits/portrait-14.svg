@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" width="400" height="480">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#94A3B8" stop-opacity="1" />
+      <stop offset="100%" stop-color="#94A3B8" stop-opacity="0.85" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <!-- Studio Background -->
+  <rect width="400" height="480" fill="url(#bgGrad)" />
+
+  <!-- Lighting Vignette -->
+  <radialGradient id="vignette" cx="50%" cy="40%" r="55%">
+    <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.2" />
+    <stop offset="100%" stop-color="#000000" stop-opacity="0.2" />
+  </radialGradient>
+  <rect width="400" height="480" fill="url(#vignette)" />
+
+  <g filter="url(#shadow)">
+    
+      <path d="M 80 480 Q 90 370 140 345 Q 200 375 260 345 Q 310 370 320 480 Z" fill="#991B1B" />
+      <!-- Collar / V-neck -->
+      <path d="M 160 350 Q 200 380 240 350" fill="none" stroke="#FFFFFF" stroke-width="2" opacity="0.3" />
+    
+    
+    <!-- Neck -->
+    <path d="M 165 280 L 165 360 L 235 360 L 235 280 Z" fill="#C89255" />
+    <path d="M 170 280 L 170 360 L 230 360 L 230 280 Z" fill="#E8B578" />
+
+    <!-- Head / Face Oval -->
+    <path d="M 120 200 Q 120 305 200 310 Q 280 305 280 200 Q 280 130 200 130 Q 120 130 120 200 Z" fill="#E8B578" />
+
+    <!-- Ears -->
+    <ellipse cx="118" cy="210" rx="9" ry="16" fill="#E8B578" />
+    <ellipse cx="119" cy="210" rx="5" ry="10" fill="#C89255" opacity="0.6" />
+    <ellipse cx="282" cy="210" rx="9" ry="16" fill="#E8B578" />
+    <ellipse cx="281" cy="210" rx="5" ry="10" fill="#C89255" opacity="0.6" />
+
+    <!-- Eyebrows -->
+    <path d="M 145 185 Q 165 178 182 184" stroke="#171717" stroke-width="3" stroke-linecap="round" fill="none" />
+    <path d="M 218 184 Q 235 178 255 185" stroke="#171717" stroke-width="3" stroke-linecap="round" fill="none" />
+
+    <!-- Eyes (Expressive, warm) -->
+    <ellipse cx="163" cy="204" rx="10" ry="7" fill="#FFFFFF" />
+    <circle cx="164" cy="204" r="5" fill="#2E1B0F" />
+    <circle cx="166" cy="202" r="1.8" fill="#FFFFFF" />
+
+    <ellipse cx="237" cy="204" rx="10" ry="7" fill="#FFFFFF" />
+    <circle cx="236" cy="204" r="5" fill="#2E1B0F" />
+    <circle cx="238" cy="202" r="1.8" fill="#FFFFFF" />
+
+    <!-- Upper eyelid lines -->
+    <path d="M 152 201 Q 163 196 174 201" stroke="#1F1B18" stroke-width="2" fill="none" />
+    <path d="M 226 201 Q 237 196 248 201" stroke="#1F1B18" stroke-width="2" fill="none" />
+
+    <!-- Nose -->
+    <path d="M 198 200 L 195 235 Q 200 240 205 235" stroke="#C89255" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    <!-- Nostril soft hints -->
+    <ellipse cx="192" cy="236" rx="2.5" ry="1.5" fill="#C89255" opacity="0.6" />
+    <ellipse cx="208" cy="236" rx="2.5" ry="1.5" fill="#C89255" opacity="0.6" />
+
+    <!-- Mouth / Smile -->
+    <path d="M 178 262 Q 200 280 222 262" stroke="#991B1B" stroke-width="2" fill="#FFFFFF" />
+    <path d="M 178 262 Q 200 274 222 262" fill="#E11D48" opacity="0.7" />
+    <path d="M 183 263 Q 200 269 217 263" fill="#FFFFFF" />
+  
+    
+      <!-- Hair Back Layer -->
+      <path d="M 100 200 Q 90 340 110 400 Q 130 350 120 260 Z" fill="#171717" />
+      <path d="M 300 200 Q 310 340 290 400 Q 270 350 280 260 Z" fill="#171717" />
+      <!-- Hair Top Crown & Waves -->
+      <path d="M 105 200 Q 95 85 200 80 Q 305 85 295 200 Q 270 110 200 115 Q 130 110 105 200 Z" fill="#171717" />
+      <path d="M 105 180 Q 120 280 135 340 Q 120 300 115 230 Z" fill="#171717" />
+      <path d="M 295 180 Q 280 280 265 340 Q 280 300 285 230 Z" fill="#171717" />
+    
+    
+      <!-- Gold Earrings -->
+      <circle cx="118" cy="245" r="4" fill="#FBBF24" stroke="#D97706" stroke-width="1.5" />
+      <circle cx="282" cy="245" r="4" fill="#FBBF24" stroke="#D97706" stroke-width="1.5" />
+    
+  </g>
+</svg>

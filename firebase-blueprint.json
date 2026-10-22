@@ -1,0 +1,174 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile identifying teachers, students, or administrators",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["teacher", "student", "admin"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "email"]
+    },
+    "Classroom": {
+      "title": "Classroom",
+      "description": "Classroom or course section",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 120 },
+        "department": { "type": "string", "maxLength": 100 },
+        "academicYear": { "type": "string", "maxLength": 20 },
+        "year": { "type": "string", "maxLength": 20 },
+        "semester": { "type": "string", "maxLength": 30 },
+        "section": { "type": "string", "maxLength": 10 },
+        "attendanceThreshold": { "type": "number" },
+        "studentCount": { "type": "number" },
+        "lastAttendanceDate": { "type": "string" }
+      },
+      "required": ["id", "name", "department"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Student roster record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "rollNo": { "type": "string", "maxLength": 40 },
+        "studentId": { "type": "string", "maxLength": 40 },
+        "avatarUrl": { "type": "string" },
+        "department": { "type": "string" },
+        "classroomId": { "type": "string" },
+        "semester": { "type": "string" },
+        "section": { "type": "string" },
+        "attendancePercentage": { "type": "number" },
+        "totalClassesHeld": { "type": "number" },
+        "totalClassesAttended": { "type": "number" },
+        "email": { "type": "string" }
+      },
+      "required": ["id", "name", "rollNo", "classroomId"]
+    },
+    "Subject": {
+      "title": "Subject",
+      "description": "Subject or academic course",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "code": { "type": "string", "maxLength": 20 },
+        "classroomId": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "weeklyClasses": { "type": "number" },
+        "academicYear": { "type": "string" }
+      },
+      "required": ["id", "name", "code", "classroomId"]
+    },
+    "AttendanceSession": {
+      "title": "AttendanceSession",
+      "description": "Attendance session records and verification",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "classroomId": { "type": "string" },
+        "classroomName": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "date": { "type": "string" },
+        "period": { "type": "number" },
+        "markedBy": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "completed"] },
+        "records": { "type": "object" },
+        "totalStudents": { "type": "number" },
+        "presentCount": { "type": "number" },
+        "absentCount": { "type": "number" },
+        "unmarkedCount": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "completedAt": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "classroomId", "subjectId", "date", "status", "records"]
+    },
+    "QRAttendanceSession": {
+      "title": "QRAttendanceSession",
+      "description": "Live classroom QR code attendance session with rotating security tokens",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "classroomId": { "type": "string" },
+        "classroomName": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "subjectName": { "type": "string" },
+        "teacherName": { "type": "string" },
+        "currentToken": { "type": "string" },
+        "previousToken": { "type": "string" },
+        "tokenExpiresAt": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "paused", "closed"] },
+        "createdAt": { "type": "string" },
+        "expiresAt": { "type": "string" },
+        "totalScanned": { "type": "number" },
+        "scannedStudents": { "type": "object" },
+        "submissions": { "type": "object" },
+        "totalSubmissions": { "type": "number" }
+      },
+      "required": ["id", "classroomId", "currentToken", "tokenExpiresAt", "status"]
+    },
+    "QRSubmissionRecord": {
+      "title": "QRSubmissionRecord",
+      "description": "Student attendance submission record verified against session token",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "fullName": { "type": "string", "maxLength": 100 },
+        "rollNo": { "type": "string", "maxLength": 40 },
+        "normalizedRollNo": { "type": "string", "maxLength": 40 },
+        "department": { "type": "string" },
+        "section": { "type": "string" },
+        "submittedAt": { "type": "string" },
+        "deviceId": { "type": "string" },
+        "tokenUsed": { "type": "string" },
+        "verificationStatus": { "type": "string", "enum": ["verified", "unmatched_roll", "unmatched_name", "flagged_proxy"] },
+        "status": { "type": "string", "enum": ["present", "absent"] },
+        "isDuplicate": { "type": "boolean" },
+        "isRosterMatch": { "type": "boolean" },
+        "officialRosterName": { "type": "string" }
+      },
+      "required": ["id", "studentId", "fullName", "rollNo", "submittedAt", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Authenticated user profile documents"
+    },
+    "/classrooms/{classroomId}": {
+      "schema": { "$ref": "#/entities/Classroom" },
+      "description": "Classroom collections"
+    },
+    "/students/{studentId}": {
+      "schema": { "$ref": "#/entities/Student" },
+      "description": "Enrolled student records"
+    },
+    "/subjects/{subjectId}": {
+      "schema": { "$ref": "#/entities/Subject" },
+      "description": "Assigned academic subjects"
+    },
+    "/attendance_sessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/AttendanceSession" },
+      "description": "Session attendance records and history"
+    },
+    "/qr_sessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/QRAttendanceSession" },
+      "description": "Live QR attendance sessions with rotating tokens"
+    },
+    "/qr_sessions/{sessionId}/submissions/{submissionId}": {
+      "schema": { "$ref": "#/entities/QRSubmissionRecord" },
+      "description": "Live student submissions for a QR attendance session"
+    }
+  }
+}

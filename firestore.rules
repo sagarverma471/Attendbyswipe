@@ -1,0 +1,63 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Connection validation probe path
+    match /test/{testId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // User profile documents
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+    }
+
+    // Classrooms
+    match /classrooms/{classroomId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(classroomId);
+    }
+
+    // Students
+    match /students/{studentId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(studentId);
+    }
+
+    // Subjects
+    match /subjects/{subjectId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(subjectId);
+    }
+
+    // Attendance Sessions
+    match /attendance_sessions/{sessionId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(sessionId);
+    }
+
+    // Live QR Attendance Sessions (rotating tokens & student submissions)
+    match /qr_sessions/{sessionId} {
+      allow read, write: if isValidId(sessionId);
+
+      match /submissions/{submissionId} {
+        allow read, write: if isValidId(sessionId) && isValidId(submissionId);
+      }
+    }
+  }
+}

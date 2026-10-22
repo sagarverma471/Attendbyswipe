@@ -1,0 +1,246 @@
+@import "tailwindcss";
+
+@theme {
+  --breakpoint-xs: 480px;
+}
+
+@layer base {
+  *, ::before, ::after {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+    background-color: #070A12;
+    color: #F1F5F9;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #root {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0B0F19;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E293B;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes bounceShort {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-bounce-short {
+  animation: bounceShort 0.8s ease-in-out infinite;
+}
+
+/* Hardware accelerated layer */
+.will-change-transform {
+  will-change: transform;
+}
+
+/* Responsive Table Wrapper Media Queries (screens < 768px) */
+@media (max-width: 767.98px) {
+  .responsive-table-view {
+    display: none !important;
+  }
+  .responsive-card-view {
+    display: block !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-table-view {
+    display: block !important;
+  }
+  .responsive-card-view {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   FUTURISTIC MODERN HUD & QUANTUM CYBER DESIGN SYSTEM
+   ========================================================================== */
+
+/* Futuristic Ambient Matrix Grid */
+.futuristic-grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(139, 92, 246, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Subtle Sub-Pixel Laser Scanlines */
+.laser-scanlines {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(6, 182, 212, 0.03) 50%,
+    rgba(6, 182, 212, 0.03)
+  );
+  background-size: 100% 4px;
+}
+
+/* Holographic Quantum Glass Panel */
+.futuristic-glass {
+  background: linear-gradient(135deg, rgba(16, 23, 44, 0.78) 0%, rgba(8, 12, 25, 0.92) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 10px 35px 0 rgba(0, 0, 0, 0.55);
+}
+
+.futuristic-glass:hover {
+  border-color: rgba(6, 182, 212, 0.4);
+  box-shadow: 0 12px 40px 0 rgba(6, 182, 212, 0.18);
+}
+
+/* Futuristic Glowing Neon Borders & Ambient Lights */
+.futuristic-glow-violet {
+  box-shadow: 0 0 24px -2px rgba(139, 92, 246, 0.45);
+}
+
+.futuristic-glow-cyan {
+  box-shadow: 0 0 24px -2px rgba(6, 182, 212, 0.45);
+}
+
+.futuristic-glow-emerald {
+  box-shadow: 0 0 28px -2px rgba(16, 185, 129, 0.5);
+}
+
+.futuristic-glow-rose {
+  box-shadow: 0 0 28px -2px rgba(244, 63, 94, 0.5);
+}
+
+.futuristic-glow-amber {
+  box-shadow: 0 0 28px -2px rgba(245, 158, 11, 0.5);
+}
+
+/* Holographic Shimmer Highlight */
+@keyframes holographicShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-holo-shimmer {
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0) 10%,
+    rgba(139, 92, 246, 0.18) 35%,
+    rgba(6, 182, 212, 0.28) 50%,
+    rgba(139, 92, 246, 0.18) 65%,
+    rgba(255, 255, 255, 0) 90%
+  );
+  background-size: 200% 100%;
+  animation: holographicShimmer 5s infinite linear;
+}
+
+/* Holographic Security Ribbon */
+.hologram-ribbon {
+  background: linear-gradient(
+    90deg,
+    rgba(244, 63, 94, 0.25) 0%,
+    rgba(245, 158, 11, 0.25) 20%,
+    rgba(16, 185, 129, 0.25) 40%,
+    rgba(6, 182, 212, 0.25) 60%,
+    rgba(139, 92, 246, 0.25) 80%,
+    rgba(244, 63, 94, 0.25) 100%
+  );
+  background-size: 200% 100%;
+  animation: holographicShimmer 6s linear infinite;
+}
+
+/* Futuristic Cyber HUD Reticle Corner Accents */
+.cyber-corner {
+  position: relative;
+}
+
+.cyber-corner::before,
+.cyber-corner::after {
+  content: "";
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.cyber-corner::before {
+  top: 0;
+  left: 0;
+  border-top: 2px solid rgba(6, 182, 212, 0.85);
+  border-left: 2px solid rgba(6, 182, 212, 0.85);
+  border-top-left-radius: 8px;
+}
+
+.cyber-corner::after {
+  bottom: 0;
+  right: 0;
+  border-bottom: 2px solid rgba(139, 92, 246, 0.85);
+  border-right: 2px solid rgba(139, 92, 246, 0.85);
+  border-bottom-right-radius: 8px;
+}
+
+/* Pulse Rings */
+@keyframes cyberPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 1;
+  }
+}
+
+.animate-cyber-pulse {
+  animation: cyberPulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

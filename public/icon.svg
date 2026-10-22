@@ -1,0 +1,201 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B0E1B" />
+      <stop offset="45%" stop-color="#11162A" />
+      <stop offset="100%" stop-color="#1A1538" />
+    </linearGradient>
+
+    <!-- Squircle Border Gradient -->
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A78BFA" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#6366F1" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0.7" />
+    </linearGradient>
+
+    <!-- Main Ribbon Top Loop (Luminous Violet to Indigo) -->
+    <linearGradient id="ribbonTop" x1="15%" y1="10%" x2="85%" y2="55%">
+      <stop offset="0%" stop-color="#D8B4FE" />
+      <stop offset="20%" stop-color="#C084FC" />
+      <stop offset="55%" stop-color="#8B5CF6" />
+      <stop offset="85%" stop-color="#6366F1" />
+      <stop offset="100%" stop-color="#4F46E5" />
+    </linearGradient>
+
+    <!-- Main Ribbon Bottom Loop (Electric Blue to Cyan/Teal) -->
+    <linearGradient id="ribbonBottom" x1="20%" y1="45%" x2="90%" y2="95%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="35%" stop-color="#3B82F6" />
+      <stop offset="70%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#14B8A6" />
+    </linearGradient>
+
+    <!-- Gloss Specular Highlight 1 (Top Arch Crest) -->
+    <linearGradient id="glossTop" x1="20%" y1="5%" x2="50%" y2="40%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.9" />
+      <stop offset="50%" stop-color="#E9D5FF" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#A855F7" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Gloss Specular Highlight 2 (Bottom Arch Crest) -->
+    <linearGradient id="glossBottom" x1="45%" y1="65%" x2="80%" y2="90%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.85" />
+      <stop offset="50%" stop-color="#A5F3FC" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- 3D Center Twist Shadow -->
+    <linearGradient id="depthShadow" x1="30%" y1="45%" x2="70%" y2="55%">
+      <stop offset="0%" stop-color="#0F172A" stop-opacity="0.75" />
+      <stop offset="60%" stop-color="#1E1B4B" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#312E81" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Dynamic Sheen Streak -->
+    <linearGradient id="sheenStreak" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.5" />
+      <stop offset="30%" stop-color="#FFFFFF" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Ambient Neon Blur Filter -->
+    <filter id="neonBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="32" result="blur" />
+    </filter>
+
+    <!-- Ribbon Drop Shadow Filter -->
+    <filter id="ribbonShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000000" flood-opacity="0.55" />
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#7C3AED" flood-opacity="0.35" />
+    </filter>
+  </defs>
+
+  <!-- Background Squircle Container -->
+  <rect width="512" height="512" rx="120" fill="url(#bgGrad)" />
+
+  <!-- Outer Glassmorphic Border -->
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="none" stroke="url(#borderGrad)" stroke-width="4" stroke-opacity="0.65" />
+
+  <!-- Ambient Neon Aura Halos -->
+  <circle cx="230" cy="220" r="150" fill="#7C3AED" opacity="0.3" filter="url(#neonBlur)" />
+  <circle cx="310" cy="300" r="130" fill="#06B6D4" opacity="0.25" filter="url(#neonBlur)" />
+  <circle cx="256" cy="256" r="180" fill="#4F46E5" opacity="0.18" filter="url(#neonBlur)" />
+
+  <!-- Glossy 'S' Glyph Group Scaled to Center (origin 100,100 -> centered in 512,512, scaled 2.0x) -->
+  <g transform="translate(256, 256) scale(1.95) translate(-100, -100)" filter="url(#ribbonShadow)">
+    <!-- Bottom Loop / Tail of the 'S' Ribbon -->
+    <path
+      d="M 105 102
+         C 125 110, 158 122, 158 148
+         C 158 172, 134 186, 102 186
+         C 66 186, 44 168, 42 144
+         C 42 136, 48 132, 56 132
+         C 64 132, 69 137, 72 144
+         C 77 157, 88 166, 103 166
+         C 121 166, 134 156, 134 144
+         C 134 130, 114 122, 94 112
+         C 86 108, 80 104, 76 98
+         Z"
+      fill="url(#ribbonBottom)"
+    />
+
+    <!-- Top Loop / Head of the 'S' Ribbon -->
+    <path
+      d="M 96 98
+         C 74 90, 42 78, 42 52
+         C 42 28, 66 14, 98 14
+         C 134 14, 156 32, 158 56
+         C 158 64, 152 68, 144 68
+         C 136 68, 131 63, 128 56
+         C 123 43, 112 34, 97 34
+         C 79 34, 66 44, 66 56
+         C 66 70, 86 78, 106 88
+         C 114 92, 120 96, 124 102
+         Z"
+      fill="url(#ribbonTop)"
+    />
+
+    <!-- Central Connecting Sweep (Dynamic swipe fold) -->
+    <path
+      d="M 66 56
+         C 66 72, 88 82, 108 92
+         C 128 102, 152 114, 152 138
+         C 152 148, 146 156, 136 160
+         C 128 146, 120 134, 104 124
+         C 84 112, 66 100, 66 74
+         Z"
+      fill="url(#ribbonTop)"
+      opacity="0.9"
+    />
+
+    <!-- Depth Shadow at inner fold waist -->
+    <path
+      d="M 88 94
+         C 98 99, 110 105, 120 112
+         C 110 114, 98 110, 88 104
+         Z"
+      fill="url(#depthShadow)"
+    />
+
+    <!-- Gloss Specular Highlight 1: Top Arch Curve -->
+    <path
+      d="M 98 18
+         C 128 18, 146 32, 149 52
+         C 142 42, 126 34, 102 34
+         C 78 34, 66 44, 66 56
+         C 66 52, 70 38, 98 18
+         Z"
+      fill="url(#glossTop)"
+    />
+
+    <!-- Gloss Specular Highlight 2: Top Arch Bright Rim -->
+    <path
+      d="M 75 22
+         C 85 16, 95 15, 110 16
+         C 125 18, 142 26, 150 40"
+      stroke="#FFFFFF"
+      stroke-width="4"
+      stroke-linecap="round"
+      stroke-opacity="0.85"
+      fill="none"
+    />
+
+    <!-- Gloss Specular Highlight 3: Bottom Arch Curve -->
+    <path
+      d="M 102 182
+         C 72 182, 54 168, 51 148
+         C 58 158, 74 166, 98 166
+         C 122 166, 134 156, 134 144
+         C 134 148, 130 162, 102 182
+         Z"
+      fill="url(#glossBottom)"
+    />
+
+    <!-- Gloss Specular Highlight 4: Bottom Arch Bright Rim -->
+    <path
+      d="M 125 178
+         C 115 184, 105 185, 90 184
+         C 75 182, 58 174, 50 160"
+      stroke="#FFFFFF"
+      stroke-width="4"
+      stroke-linecap="round"
+      stroke-opacity="0.85"
+      fill="none"
+    />
+
+    <!-- Diagonal Glass Sheen across the S body -->
+    <ellipse
+      cx="100"
+      cy="92"
+      rx="20"
+      ry="42"
+      transform="rotate(-28 100 92)"
+      fill="url(#sheenStreak)"
+    />
+
+    <!-- Micro Specular Sparkle Accents -->
+    <circle cx="152" cy="46" r="3.5" fill="#FFFFFF" opacity="0.95" />
+    <circle cx="48" cy="154" r="3" fill="#A5F3FC" opacity="0.9" />
+  </g>
+</svg>

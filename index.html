@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      (function() {
+        // Suppress Vite HMR WebSocket errors in AI Studio iframe/dev environment
+        window.addEventListener('error', function(event) {
+          if (
+            (event && event.message && event.message.indexOf('WebSocket closed without opened') !== -1) ||
+            (event && event.error && event.error.message && event.error.message.indexOf('WebSocket closed without opened') !== -1)
+          ) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(event) {
+          var reason = event && event.reason;
+          var msg = (reason && reason.message) || String(reason || '');
+          if (msg.indexOf('WebSocket closed without opened') !== -1) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+          }
+        }, true);
+
+        var origConsoleError = console.error;
+        console.error = function() {
+          for (var i = 0; i < arguments.length; i++) {
+            var str = String(arguments[i] || '');
+            if (str.indexOf('WebSocket closed without opened') !== -1) {
+              return;
+            }
+          }
+          return origConsoleError.apply(console, arguments);
+        };
+
+        if (typeof window !== 'undefined' && window.WebSocket) {
+          var NativeWebSocket = window.WebSocket;
+          function ViteHmrWebSocket(url, protocols) {
+            var target = document.createDocumentFragment();
+            this.url = url;
+            this.protocol = Array.isArray(protocols) ? protocols[0] : (protocols || '');
+            this.readyState = 1; // WebSocket.OPEN
+            this.bufferedAmount = 0;
+            this.binaryType = 'blob';
+            this.extensions = '';
+
+            this.addEventListener = target.addEventListener.bind(target);
+            this.removeEventListener = target.removeEventListener.bind(target);
+            this.dispatchEvent = target.dispatchEvent.bind(target);
+
+            var self = this;
+            setTimeout(function() {
+              var evt = new Event('open');
+              self.dispatchEvent(evt);
+              if (typeof self.onopen === 'function') {
+                self.onopen(evt);
+              }
+            }, 0);
+          }
+
+          ViteHmrWebSocket.prototype.send = function() {};
+          ViteHmrWebSocket.prototype.close = function(code, reason) {
+            this.readyState = 3; // WebSocket.CLOSED
+            var evt = new CloseEvent('close', { wasClean: true, code: code || 1000, reason: reason || '' });
+            this.dispatchEvent(evt);
+            if (typeof this.onclose === 'function') {
+              this.onclose(evt);
+            }
+          };
+
+          window.WebSocket = function(url, protocols) {
+            var isViteHmr =
+              protocols === 'vite-hmr' ||
+              (Array.isArray(protocols) && protocols.indexOf('vite-hmr') !== -1) ||
+              (typeof url === 'string' && (url.indexOf('vite-hmr') !== -1 || url.indexOf('/@vite/') !== -1));
+
+            if (isViteHmr) {
+              return new ViteHmrWebSocket(url, protocols);
+            }
+            return new NativeWebSocket(url, protocols);
+          };
+
+          window.WebSocket.prototype = NativeWebSocket.prototype;
+          window.WebSocket.CONNECTING = NativeWebSocket.CONNECTING;
+          window.WebSocket.OPEN = NativeWebSocket.OPEN;
+          window.WebSocket.CLOSING = NativeWebSocket.CLOSING;
+          window.WebSocket.CLOSED = NativeWebSocket.CLOSED;
+        }
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SwipeAttend</title>
+    <meta name="description" content="Gesture-Based Smart Attendance Management System. Attendance. Just Swipe." />
+    <meta property="og:title" content="SwipeAttend" />
+    <meta property="og:description" content="Gesture-Based Smart Attendance Management System. Attendance. Just Swipe." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#090D1A" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SwipeAttend" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
