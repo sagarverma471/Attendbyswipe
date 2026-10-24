@@ -336,7 +336,7 @@ export const UploadStudentListModal: React.FC<UploadStudentListModalProps> = ({
         studentId: item.studentId.trim() || `ST${item.rollNo.replace(/[^a-zA-Z0-9]/g, '')}`,
         department: item.department || selectedClassroom?.department || 'B.Tech Computer Science',
         classroomId: targetClassroomId,
-        semester: item.semester || selectedClassroom?.semester || '3rd Year • 5th Semester',
+        semester: item.semester || selectedClassroom?.semester || '1st Year • 1st Semester',
         section: item.section || selectedClassroom?.section || 'Section A',
         avatarUrl: item.avatarUrl,
         email: item.email || undefined,

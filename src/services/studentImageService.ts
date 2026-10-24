@@ -65,9 +65,10 @@ export const getStudentPortraitUrl = (
   student: { id: string; rollNo: string; avatarUrl?: string; classroomId?: string },
   fallbackIndex?: number
 ): string => {
-  // Check if student already has a valid sliced or local portrait
+  // Check if student already has a valid sliced or local portrait (excluding svg drawings)
   if (
     student.avatarUrl &&
+    !student.avatarUrl.endsWith('.svg') &&
     (student.avatarUrl.startsWith('/student-portraits/') ||
       student.avatarUrl.startsWith('data:image/') ||
       student.avatarUrl.startsWith('blob:'))
@@ -75,8 +76,22 @@ export const getStudentPortraitUrl = (
     return student.avatarUrl;
   }
 
+  // If in BEE classroom (class-cse-3b)
+  if (student.classroomId === 'class-cse-3b' || (student.id && student.id.includes('bee'))) {
+    const num = parseInt(student.rollNo.replace(/\D/g, ''), 10) || 1;
+    const safeNum = Math.min(Math.max(num, 1), 72);
+    return `/student-portraits/bee/bee_${String(safeNum).padStart(2, '0')}.jpg`;
+  }
+
+  // If in Physics classroom (class-phy-1a)
+  if (student.classroomId === 'class-phy-1a' || (student.id && student.id.includes('phy'))) {
+    const num = parseInt(student.rollNo.replace(/\D/g, ''), 10) || 1;
+    const safeNum = Math.min(Math.max(num, 1), 60);
+    return `/student-portraits/physics/phy_${String(safeNum).padStart(2, '0')}.jpg`;
+  }
+
   // If in classroom class-cse-3a (B.Tech CSE Mathematics)
-  if (student.classroomId === 'class-cse-3a' || student.classroomId === 'class-cse-3b') {
+  if (student.classroomId === 'class-cse-3a') {
     const idx = getCSEStudentPortraitIndex(student.rollNo);
     return getPortraitPathByIndex(idx);
   }

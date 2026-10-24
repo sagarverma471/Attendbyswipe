@@ -115,14 +115,14 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
     studentId: '',
     department: 'B.Tech Computer Science',
     classroomId: 'class-cse-3a',
-    semester: '3rd Year • 5th Semester',
+    semester: '1st Year • 1st Semester',
     section: 'Section A',
     email: '',
   });
 
   // Enhanced Roll Number & Student Generator State
-  const [generatorTab, setGeneratorTab] = useState<'ai' | 'template'>('ai');
-  const [aiPrompt, setAiPrompt] = useState('Generate roll numbers for 30 students in 3rd Year CSE with format 26CSE001 to 26CSE030 with realistic names');
+  const [generatorTab, setGeneratorTab] = useState<'ai' | 'template'>('template');
+  const [aiPrompt, setAiPrompt] = useState('Generate roll numbers for 30 students in 1st Year CSE with format 26CSE001 to 26CSE030 with realistic names');
   const [isGeneratingWithAi, setIsGeneratingWithAi] = useState(false);
   const [aiExplanation, setAiExplanation] = useState<string>('');
   const [patternType, setPatternType] = useState<'sequential' | 'institutional' | 'lateral' | 'custom' | 'simple'>('sequential');
@@ -136,7 +136,7 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
   const [targetClassroomId, setTargetClassroomId] = useState(classrooms?.[0]?.id || 'class-cse-3a');
   const [targetDepartment, setTargetDepartment] = useState('B.Tech Computer Science');
   const [targetSection, setTargetSection] = useState('Section A');
-  const [targetSemester, setTargetSemester] = useState('3rd Year • 5th Semester');
+  const [targetSemester, setTargetSemester] = useState('1st Year • 1st Semester');
   const [rollPreview, setRollPreview] = useState<string[]>([]);
   const [generatedStudentsPreview, setGeneratedStudentsPreview] = useState<Omit<Student, 'id'>[]>([]);
   const [isRollsCopied, setIsRollsCopied] = useState(false);
@@ -293,7 +293,7 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
         studentId: values[2] || `ST${1000 + idx}`,
         department: 'B.Tech Computer Science',
         classroomId: 'class-cse-3a',
-        semester: '3rd Year • 5th Semester',
+        semester: '1st Year • 1st Semester',
         section: 'Section A',
         attendancePercentage: 85,
         totalClassesHeld: 50,
@@ -473,23 +473,23 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
               handlePreviewRolls();
               setIsRollModalOpen(true);
             }}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#141A2E] border border-white/10 text-xs font-semibold text-slate-200 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#131A32] hover:bg-[#1C2646] border border-cyan-500/40 hover:border-cyan-400 text-xs font-bold text-white transition-all cursor-pointer shadow-sm active:scale-95"
           >
-            <Hash className="w-3.5 h-3.5 text-violet-400" />
+            <Hash className="w-3.5 h-3.5 text-cyan-400" />
             <span>Generate Rolls</span>
           </button>
 
           <button
             onClick={() => setIsImportModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#141A2E] border border-white/10 text-xs font-semibold text-slate-200 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#131A32] hover:bg-[#1C2646] border border-slate-600/80 hover:border-slate-500 text-xs font-bold text-white transition-all cursor-pointer shadow-sm active:scale-95"
           >
-            <Upload className="w-3.5 h-3.5 text-violet-400" />
+            <Upload className="w-3.5 h-3.5 text-slate-300" />
             <span>Import CSV</span>
           </button>
 
           <button
             onClick={() => setIsUploadDocModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-bold shadow-lg shadow-violet-600/30 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs font-extrabold shadow-md shadow-violet-600/30 border border-violet-400/50 transition-all cursor-pointer active:scale-95"
             title="Upload student list from PDF, Excel (.xlsx), or CSV"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
@@ -498,7 +498,7 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
 
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold shadow-lg shadow-violet-600/30 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-extrabold shadow-md shadow-emerald-600/30 border border-emerald-400/50 transition-all cursor-pointer active:scale-95"
           >
             <Plus className="w-4 h-4" />
             <span>Add Student</span>
@@ -507,29 +507,29 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
       </div>
 
       {/* Filter and Search Bar (Responsive) */}
-      <div className="bg-[#101526] border border-white/8 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="bg-[#0C1226] border border-slate-700/80 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shadow-md">
         {/* Search */}
         <div className="relative w-full sm:flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 sm:top-3" />
+          <Search className="w-4 h-4 text-cyan-400 absolute left-3 top-2.5 sm:top-3" />
           <input
             type="text"
             placeholder="Search students by name, roll no, or ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#171E33] border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-violet-500"
+            className="w-full bg-[#060A18] border border-slate-700 focus:border-cyan-400 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-500/40 transition-colors font-medium"
           />
         </div>
 
         {/* Branch Filter Tabs */}
-        <div className="grid grid-cols-4 sm:flex items-center gap-1 bg-[#171E33] p-1 rounded-xl border border-white/5 w-full sm:w-auto">
+        <div className="grid grid-cols-4 sm:flex items-center gap-1.5 bg-[#060A18] p-1.5 rounded-xl border border-slate-700/80 w-full sm:w-auto">
           {(['All', 'CSE', 'EE', 'ME'] as const).map((branch) => (
             <button
               key={branch}
               onClick={() => setBranchFilter(branch)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer text-center ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
                 branchFilter === branch
-                  ? 'bg-violet-600 text-white shadow'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md border border-violet-400/50'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
               }`}
             >
               {branch}
@@ -956,7 +956,7 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
                     rows={2}
                     value={aiPrompt}
                     onChange={(e) => setAiPrompt(e.target.value)}
-                    placeholder="e.g. Generate 40 roll numbers for 3rd Year CSE with format 26CSE001 to 26CSE040 with student names"
+                    placeholder="e.g. Generate 40 roll numbers for 1st Year CSE with format 26CSE001 to 26CSE040 with student names"
                     className="w-full bg-[#141A2E] border border-white/10 rounded-xl p-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 text-xs"
                   />
 
@@ -985,7 +985,7 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
                               setAiPrompt('Generate 50 roll numbers numbered 1 to 50 with student names');
                               setPatternType('simple');
                             } else {
-                              setAiPrompt('Generate 30 roll numbers for CSE 3rd Year from 26CSE001 to 26CSE030 with realistic names');
+                              setAiPrompt('Generate 30 roll numbers for CSE 1st Year from 26CSE001 to 26CSE030 with realistic names');
                               setRollPrefix('26CSE');
                               setPatternType('sequential');
                             }
@@ -1170,7 +1170,7 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
                           </option>
                         ))
                       ) : (
-                        <option value="class-cse-3a">B.Tech CSE · 3rd Year · Sec A</option>
+                        <option value="class-cse-3a">B.Tech CSE · 1st Year · Sec A</option>
                       )}
                     </select>
                   </div>

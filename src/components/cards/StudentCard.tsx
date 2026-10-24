@@ -101,7 +101,7 @@ const StudentTableRowComponent: React.FC<StudentTableRowProps> = ({
         {student.department.replace('B.Tech ', '')}
       </td>
       <td className="py-3 px-3 sm:px-4 text-slate-400 text-xs">
-        {student.semester.split('•')[0] || '3rd Year'}
+        {student.semester.split('•')[0] || '1st Year'}
       </td>
       <td className="py-3 px-3 sm:px-4 font-mono font-bold text-xs">
         <span
@@ -119,22 +119,22 @@ const StudentTableRowComponent: React.FC<StudentTableRowProps> = ({
       <td className="py-3 px-3 sm:px-4">
         <div className="flex items-center gap-1.5">
           {onQuickStatusChange && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => onQuickStatusChange(student.id, 'present')}
-                className="p-1 rounded bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 text-[10px] font-semibold border border-emerald-500/30 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold border border-emerald-400/50 shadow-sm transition-all cursor-pointer active:scale-95"
                 title="Mark Present"
               >
-                <Check className="w-3 h-3" />
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
               </button>
               <button
                 type="button"
                 onClick={() => onQuickStatusChange(student.id, 'absent')}
-                className="p-1 rounded bg-rose-500/15 hover:bg-rose-500/30 text-rose-400 text-[10px] font-semibold border border-rose-500/30 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold border border-rose-400/50 shadow-sm transition-all cursor-pointer active:scale-95"
                 title="Mark Absent"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3.5 h-3.5 stroke-[3]" />
               </button>
             </div>
           )}

@@ -4,6 +4,7 @@ import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 
 dotenv.config();
 
@@ -21,6 +22,35 @@ app.use((req, res, next) => {
     return res.sendStatus(200);
   }
   next();
+});
+
+// Network Interfaces Endpoint for Offline Local-Network Hotspot Mode
+app.get('/api/network-interfaces', (_req, res) => {
+  try {
+    const interfaces = os.networkInterfaces();
+    const addresses: { name: string; address: string; port: number; localUrl: string }[] = [];
+    for (const [name, netList] of Object.entries(interfaces)) {
+      if (!netList) continue;
+      for (const net of netList) {
+        if (net.family === 'IPv4' && !net.internal) {
+          addresses.push({
+            name,
+            address: net.address,
+            port: PORT,
+            localUrl: `http://${net.address}:${PORT}`,
+          });
+        }
+      }
+    }
+    return res.json({
+      success: true,
+      port: PORT,
+      interfaces: addresses,
+      defaultLocalUrl: addresses.length > 0 ? addresses[0].localUrl : `http://192.168.43.1:${PORT}`,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 // App Download Package Metadata Endpoint

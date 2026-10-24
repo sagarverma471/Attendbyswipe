@@ -53,7 +53,8 @@ export default defineConfig(() => {
           ],
         },
         workbox: {
-          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+          maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
+          globIgnores: ['**/assets/aistudio/**'],
           globPatterns: ['**/*.{js,css,html,ico,png,jpg,jpeg,svg,woff,woff2}'],
           runtimeCaching: [
             {
@@ -90,7 +91,7 @@ export default defineConfig(() => {
               options: {
                 cacheName: 'images-cache',
                 expiration: {
-                  maxEntries: 50,
+                  maxEntries: 250,
                   maxAgeSeconds: 60 * 60 * 24 * 30,
                 },
               },

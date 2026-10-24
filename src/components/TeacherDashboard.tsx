@@ -12,10 +12,12 @@ import {
   Calendar,
   History,
   QrCode,
+  WifiOff,
 } from 'lucide-react';
 import { SectionSkeleton, WidgetSkeleton } from './common/DashboardSkeletons';
 import { ScheduledClassCard } from './cards/ScheduledClassCard';
 import { getTodayIsoDate, getFormattedTodayDate } from '../utils/dateUtils';
+import { subscribeOfflineSync } from '../services/offlineSyncService';
 
 // Code-Splitting: Lazy load below-the-fold non-critical dashboard sections
 const TeacherClassroomsSection = lazy(() => import('./dashboard/TeacherClassroomsSection'));
@@ -46,6 +48,15 @@ const TeacherDashboardComponent: React.FC<TeacherDashboardProps> = ({
   onNavigateStudents,
   onLaunchQRAttendance,
 }) => {
+  const [isOnline, setIsOnline] = React.useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+
+  React.useEffect(() => {
+    const unsub = subscribeOfflineSync((status) => {
+      setIsOnline(status.isOnline);
+    });
+    return () => unsub();
+  }, []);
+
   const totalStudentsCount = classrooms.reduce((acc, c) => acc + (c.studentCount || 0), 0) || 156;
   const todayIso = getTodayIsoDate();
   const completedTodaySessions = sessions.filter(
@@ -54,6 +65,18 @@ const TeacherDashboardComponent: React.FC<TeacherDashboardProps> = ({
 
   return (
     <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-5 sm:space-y-7 overflow-x-hidden w-full min-w-0">
+      {/* Offline Mode Active Notification Banner */}
+      {!isOnline && (
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3 text-xs text-amber-200 animate-fade-in shadow-sm">
+          <div className="flex items-center gap-2.5">
+            <WifiOff className="w-4 h-4 text-amber-400 shrink-0" />
+            <span>
+              <strong>Offline Mode Active:</strong> You can take attendance for all scheduled classes without an internet connection. Decisions are saved directly to this device and will synchronize when you reconnect.
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Welcome Banner */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 w-full min-w-0">
         <div className="min-w-0 flex-1">
@@ -65,87 +88,87 @@ const TeacherDashboardComponent: React.FC<TeacherDashboardProps> = ({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
+        <div className="flex items-center gap-2 flex-wrap">
           {onLaunchQRAttendance && classrooms.length > 0 && (
             <button
               onClick={() => onLaunchQRAttendance(classrooms[0])}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/30 text-xs font-semibold text-violet-300 hover:text-white transition-colors cursor-pointer min-h-[40px] whitespace-nowrap"
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-semibold text-white transition-colors cursor-pointer min-h-[38px] shadow-sm"
               title="Launch live QR Code Attendance for class"
             >
-              <QrCode className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+              <QrCode className="w-4 h-4 text-violet-200 shrink-0" />
               <span>QR Attendance</span>
             </button>
           )}
           <button
             onClick={onNavigateStudents}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#141A2E] border border-white/10 text-xs font-semibold text-slate-200 hover:text-white transition-colors cursor-pointer min-h-[40px] whitespace-nowrap"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#121826] hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-200 hover:text-white transition-colors cursor-pointer min-h-[38px]"
           >
-            <Users className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+            <Users className="w-4 h-4 text-slate-400 shrink-0" />
             <span>Students</span>
           </button>
           <button
             onClick={onViewHistory}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#141A2E] border border-white/10 text-xs font-semibold text-slate-200 hover:text-white transition-colors cursor-pointer min-h-[40px] whitespace-nowrap"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#121826] hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-slate-200 hover:text-white transition-colors cursor-pointer min-h-[38px]"
           >
-            <History className="w-3.5 h-3.5 text-violet-400 shrink-0" />
+            <History className="w-4 h-4 text-slate-400 shrink-0" />
             <span>History</span>
           </button>
         </div>
       </div>
 
-      {/* Statistics Cards: 3 futuristic summary widgets */}
+      {/* Statistics Cards: 3 clean summary widgets with clear typography */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full min-w-0">
         {/* Classes Today */}
-        <div className="futuristic-glass cyber-corner border border-emerald-500/30 hover:border-emerald-400/60 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col justify-between transition-all hover:shadow-[0_0_24px_rgba(16,185,129,0.2)] min-w-0 overflow-hidden">
+        <div className="bg-[#121826] border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-sm min-w-0">
           <div className="flex items-center justify-between">
-            <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white font-mono tabular-nums">
+            <span className="text-3xl sm:text-4xl font-extrabold text-white font-mono tabular-nums">
               3
             </span>
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.3)]">
-              <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+              <Calendar className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-2 min-w-0">
-            <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 truncate">
-              Classes Scheduled Today
+          <div className="mt-3 min-w-0">
+            <p className="text-xs font-bold text-slate-300 uppercase tracking-wide truncate">
+              Classes Today
             </p>
-            <p className="text-[11px] text-emerald-400 mt-0.5 truncate font-mono">3 periods active in timetable</p>
+            <p className="text-xs text-slate-400 mt-0.5 truncate">3 scheduled lectures</p>
           </div>
         </div>
 
         {/* Sessions Completed */}
-        <div className="futuristic-glass cyber-corner border border-violet-500/30 hover:border-violet-400/60 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col justify-between transition-all hover:shadow-[0_0_24px_rgba(139,92,246,0.2)] min-w-0 overflow-hidden">
+        <div className="bg-[#121826] border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-sm min-w-0">
           <div className="flex items-center justify-between">
-            <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-violet-400 font-mono tabular-nums">
+            <span className="text-3xl sm:text-4xl font-extrabold text-white font-mono tabular-nums">
               {completedTodaySessions > 0 ? completedTodaySessions : 2}
             </span>
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-violet-500/15 border border-violet-500/40 flex items-center justify-center text-violet-400 shrink-0 shadow-[0_0_12px_rgba(139,92,246,0.3)]">
-              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
+            <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-violet-400 shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-2 min-w-0">
-            <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 truncate">
-              Sessions Completed
+          <div className="mt-3 min-w-0">
+            <p className="text-xs font-bold text-slate-300 uppercase tracking-wide truncate">
+              Completed Today
             </p>
-            <p className="text-[11px] text-violet-400 mt-0.5 truncate font-mono">Verified in Cloud Database</p>
+            <p className="text-xs text-slate-400 mt-0.5 truncate">Recorded in database</p>
           </div>
         </div>
 
         {/* Total Students */}
-        <div className="futuristic-glass cyber-corner border border-cyan-500/30 hover:border-cyan-400/60 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col justify-between transition-all hover:shadow-[0_0_24px_rgba(6,182,212,0.2)] min-w-0 overflow-hidden">
+        <div className="bg-[#121826] border border-slate-800/90 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-sm min-w-0">
           <div className="flex items-center justify-between">
-            <span className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white font-mono tabular-nums">
+            <span className="text-3xl sm:text-4xl font-extrabold text-white font-mono tabular-nums">
               {totalStudentsCount}
             </span>
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-cyan-500/15 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0 shadow-[0_0_12px_rgba(6,182,212,0.3)]">
-              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
+              <Users className="w-5 h-5" />
             </div>
           </div>
-          <div className="mt-2 min-w-0">
-            <p className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 truncate">
-              Total Enrolled Students
+          <div className="mt-3 min-w-0">
+            <p className="text-xs font-bold text-slate-300 uppercase tracking-wide truncate">
+              Total Students
             </p>
-            <p className="text-[11px] text-cyan-400 mt-0.5 truncate font-mono">Across all branch rosters</p>
+            <p className="text-xs text-slate-400 mt-0.5 truncate">Across all sections</p>
           </div>
         </div>
       </div>
@@ -168,7 +191,7 @@ const TeacherDashboardComponent: React.FC<TeacherDashboardProps> = ({
             title="Mathematics"
             code="MA101"
             period="Period 2"
-            classroomLabel="B.Tech CSE · 3rd Year · Sec A"
+            classroomLabel="B.Tech CSE · 1st Year · Sec A"
             studentCount={72}
             timeRange="10:00 - 11:00 AM"
             themeColor="rose"
@@ -180,7 +203,7 @@ const TeacherDashboardComponent: React.FC<TeacherDashboardProps> = ({
             title="Basic electrical engineering(BEE)"
             code="EE101"
             period="Period 3"
-            classroomLabel="B.Tech CSE · 3rd Year · Sec B"
+            classroomLabel="B.Tech CSE · 1st Year · Sec B"
             studentCount={72}
             timeRange="12:00 - 01:00 PM"
             themeColor="violet"
@@ -192,11 +215,11 @@ const TeacherDashboardComponent: React.FC<TeacherDashboardProps> = ({
             title="Physics"
             code="PH101"
             period="Period 4"
-            classroomLabel="B.Tech CSE · 3rd Year · Sec A"
+            classroomLabel="B.Tech Engineering Physics · Sec C"
             studentCount={60}
             timeRange="02:00 - 03:00 PM"
             themeColor="blue"
-            classroomId="class-cse-3a"
+            classroomId="class-phy-1a"
             subjectId="sub-cn"
             onStartAttendance={onStartAttendance}
           />

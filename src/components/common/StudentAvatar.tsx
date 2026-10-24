@@ -11,16 +11,30 @@ interface StudentAvatarProps {
   priority?: boolean;
 }
 
-// Generate consistent portrait index (1 to 28) from roll number or name
-export function getLocalPortraitUrl(rollNo?: string, name?: string): string {
+// Generate consistent portrait index from roll number, studentId, or name
+export function getLocalPortraitUrl(rollNo?: string, name?: string, studentId?: string): string {
+  if (studentId && (studentId.includes('bee') || studentId.includes('ST2'))) {
+    const num = parseInt((rollNo || studentId).replace(/\D/g, ''), 10) || 1;
+    const safeNum = Math.min(Math.max(num, 1), 72);
+    return `/student-portraits/bee/bee_${String(safeNum).padStart(2, '0')}.jpg`;
+  }
+  if (studentId && (studentId.includes('phy') || studentId.includes('ST3'))) {
+    const num = parseInt((rollNo || studentId).replace(/\D/g, ''), 10) || 1;
+    const safeNum = Math.min(Math.max(num, 1), 60);
+    return `/student-portraits/physics/phy_${String(safeNum).padStart(2, '0')}.jpg`;
+  }
+  const num = parseInt((rollNo || '').replace(/\D/g, ''), 10);
+  if (!isNaN(num) && num >= 1 && num <= 72) {
+    return `/student-portraits/student_${num - 1}.jpg`;
+  }
   let hash = 0;
   const str = (rollNo || '') + (name || '');
   for (let i = 0; i < str.length; i++) {
     hash = (hash << 5) - hash + str.charCodeAt(i);
     hash |= 0;
   }
-  const index = (Math.abs(hash) % 28) + 1;
-  return `/student-portraits/portrait-${index}.svg`;
+  const index = Math.abs(hash) % 72;
+  return `/student-portraits/student_${index}.jpg`;
 }
 
 // Initials extractor
@@ -64,12 +78,12 @@ export const StudentAvatar: React.FC<StudentAvatarProps> = React.memo(({
 
   // Determine local SVG portrait fallback URL
   const localPortrait = useMemo(() => {
-    return getLocalPortraitUrl(rollNo, name);
-  }, [rollNo, name]);
+    return getLocalPortraitUrl(rollNo, name, studentId);
+  }, [rollNo, name, studentId]);
 
-  // Primary URL: If avatarUrl is present and NOT failed, use it; otherwise local portrait
+  // Primary URL: If avatarUrl is present and NOT failed and NOT an svg placeholder, use it; otherwise local portrait
   const effectiveSrc = useMemo(() => {
-    if (!avatarUrl || loadFailed) {
+    if (!avatarUrl || avatarUrl.endsWith('.svg') || loadFailed) {
       return localPortrait;
     }
     return avatarUrl;

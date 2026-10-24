@@ -83,9 +83,9 @@ export const AttendanceSetupModal: React.FC<AttendanceSetupModalProps> = ({
   const [newClassSem, setNewClassSem] = useState('1st Year • 1st Semester');
   const [newClassSec, setNewClassSec] = useState('Section A');
 
-  // Gemini Roll Number Generator Panel State
+  // Roll Number Generator Panel State
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
-  const [generatorMode, setGeneratorMode] = useState<'range' | 'custom' | 'prompt'>('range');
+  const [generatorMode, setGeneratorMode] = useState<'range' | 'custom'>('range');
   const [rangePrefix, setRangePrefix] = useState('26CSE');
   const [rangeStart, setRangeStart] = useState(1);
   const [rangeEnd, setRangeEnd] = useState(60);
@@ -549,13 +549,13 @@ export const AttendanceSetupModal: React.FC<AttendanceSetupModalProps> = ({
                       Gemini API Roll Number & Roster Generator
                     </span>
                   </div>
-                  <span className="text-[10px] font-mono text-violet-300 px-2 py-0.5 rounded-full bg-violet-500/20">
-                    Gemini 3.8 Flash
+                  <span className="text-[10px] font-mono text-slate-400 px-2 py-0.5 rounded-full bg-white/5">
+                    Roster Sequence
                   </span>
                 </div>
 
                 {/* Generator Mode Switcher Tabs */}
-                <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#090D1A] rounded-xl border border-white/5">
+                <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#090D1A] rounded-xl border border-white/5">
                   <button
                     type="button"
                     onClick={() => {
@@ -583,18 +583,6 @@ export const AttendanceSetupModal: React.FC<AttendanceSetupModalProps> = ({
                     }`}
                   >
                     Custom List
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setGeneratorMode('prompt')}
-                    className={`py-1.5 px-2 rounded-lg font-semibold transition-all cursor-pointer text-center ${
-                      generatorMode === 'prompt'
-                        ? 'bg-violet-600 text-white shadow'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    AI Prompt
                   </button>
                 </div>
 
@@ -689,22 +677,6 @@ export const AttendanceSetupModal: React.FC<AttendanceSetupModalProps> = ({
                     <p className="text-[10px] text-slate-400">
                       Gemini API will parse each roll number and automatically generate realistic student profiles for your roster.
                     </p>
-                  </div>
-                )}
-
-                {/* Mode 3: Natural Language Prompt */}
-                {generatorMode === 'prompt' && (
-                  <div className="space-y-1.5">
-                    <label className="block text-[10px] text-slate-400 font-semibold">
-                      Describe in Plain English what students to generate
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={aiPromptText}
-                      onChange={(e) => setAiPromptText(e.target.value)}
-                      placeholder="e.g. Generate 50 roll numbers for first year electrical engineering Section A with realistic names"
-                      className="w-full bg-[#171E33] border border-white/10 rounded-xl p-2 text-white text-xs focus:outline-none focus:border-violet-500"
-                    />
                   </div>
                 )}
 

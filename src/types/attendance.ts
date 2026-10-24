@@ -16,6 +16,7 @@ export interface Student {
   totalClassesHeld: number;
   totalClassesAttended: number;
   email?: string;
+  gender?: 'male' | 'female';
 }
 
 export interface Classroom {
@@ -86,6 +87,10 @@ export interface AttendanceSession {
   notes?: string;
   auditTrail?: AuditEntry[];
   sessionType?: 'qr' | 'swipe' | 'manual';
+  syncStatus?: 'saved_offline' | 'pending' | 'synced';
+  syncedAt?: string;
+  updatedAt?: string;
+  isOfflineFinalized?: boolean;
   studentMetadata?: Record<
     string,
     {

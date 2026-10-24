@@ -102,145 +102,41 @@
 }
 
 /* ==========================================================================
-   FUTURISTIC MODERN HUD & QUANTUM CYBER DESIGN SYSTEM
+   CLEAN, MODERN ACADEMIC DESIGN SYSTEM
    ========================================================================== */
 
-/* Futuristic Ambient Matrix Grid */
-.futuristic-grid-bg {
-  background-image: 
-    linear-gradient(to right, rgba(139, 92, 246, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
-  background-size: 28px 28px;
-}
-
-/* Subtle Sub-Pixel Laser Scanlines */
-.laser-scanlines {
-  background: linear-gradient(
-    to bottom,
-    rgba(255,255,255,0),
-    rgba(255,255,255,0) 50%,
-    rgba(6, 182, 212, 0.03) 50%,
-    rgba(6, 182, 212, 0.03)
-  );
-  background-size: 100% 4px;
-}
-
-/* Holographic Quantum Glass Panel */
+/* Clean Card Panel with Crisp Contrast */
 .futuristic-glass {
-  background: linear-gradient(135deg, rgba(16, 23, 44, 0.78) 0%, rgba(8, 12, 25, 0.92) 100%);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  box-shadow: 0 10px 35px 0 rgba(0, 0, 0, 0.55);
+  background: rgba(18, 24, 38, 0.95);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  border-radius: 1rem;
 }
 
 .futuristic-glass:hover {
-  border-color: rgba(6, 182, 212, 0.4);
-  box-shadow: 0 12px 40px 0 rgba(6, 182, 212, 0.18);
+  border-color: rgba(99, 102, 241, 0.4);
 }
 
-/* Futuristic Glowing Neon Borders & Ambient Lights */
+/* Accessible focus visible for buttons */
+button:focus-visible, a:focus-visible {
+  outline: 2px solid #6366F1 !important;
+  outline-offset: 2px !important;
+}
+
+/* Subtle glow indicators for active states */
 .futuristic-glow-violet {
-  box-shadow: 0 0 24px -2px rgba(139, 92, 246, 0.45);
-}
-
-.futuristic-glow-cyan {
-  box-shadow: 0 0 24px -2px rgba(6, 182, 212, 0.45);
+  box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.25);
 }
 
 .futuristic-glow-emerald {
-  box-shadow: 0 0 28px -2px rgba(16, 185, 129, 0.5);
+  box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.25);
 }
 
 .futuristic-glow-rose {
-  box-shadow: 0 0 28px -2px rgba(244, 63, 94, 0.5);
+  box-shadow: 0 4px 14px 0 rgba(244, 63, 94, 0.25);
 }
 
-.futuristic-glow-amber {
-  box-shadow: 0 0 28px -2px rgba(245, 158, 11, 0.5);
-}
-
-/* Holographic Shimmer Highlight */
-@keyframes holographicShimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-.animate-holo-shimmer {
-  background: linear-gradient(
-    110deg,
-    rgba(255, 255, 255, 0) 10%,
-    rgba(139, 92, 246, 0.18) 35%,
-    rgba(6, 182, 212, 0.28) 50%,
-    rgba(139, 92, 246, 0.18) 65%,
-    rgba(255, 255, 255, 0) 90%
-  );
-  background-size: 200% 100%;
-  animation: holographicShimmer 5s infinite linear;
-}
-
-/* Holographic Security Ribbon */
-.hologram-ribbon {
-  background: linear-gradient(
-    90deg,
-    rgba(244, 63, 94, 0.25) 0%,
-    rgba(245, 158, 11, 0.25) 20%,
-    rgba(16, 185, 129, 0.25) 40%,
-    rgba(6, 182, 212, 0.25) 60%,
-    rgba(139, 92, 246, 0.25) 80%,
-    rgba(244, 63, 94, 0.25) 100%
-  );
-  background-size: 200% 100%;
-  animation: holographicShimmer 6s linear infinite;
-}
-
-/* Futuristic Cyber HUD Reticle Corner Accents */
+/* Clean border utility */
 .cyber-corner {
   position: relative;
 }
 
-.cyber-corner::before,
-.cyber-corner::after {
-  content: "";
-  position: absolute;
-  width: 9px;
-  height: 9px;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.cyber-corner::before {
-  top: 0;
-  left: 0;
-  border-top: 2px solid rgba(6, 182, 212, 0.85);
-  border-left: 2px solid rgba(6, 182, 212, 0.85);
-  border-top-left-radius: 8px;
-}
-
-.cyber-corner::after {
-  bottom: 0;
-  right: 0;
-  border-bottom: 2px solid rgba(139, 92, 246, 0.85);
-  border-right: 2px solid rgba(139, 92, 246, 0.85);
-  border-bottom-right-radius: 8px;
-}
-
-/* Pulse Rings */
-@keyframes cyberPulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.03);
-    opacity: 1;
-  }
-}
-
-.animate-cyber-pulse {
-  animation: cyberPulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}

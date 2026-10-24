@@ -20,6 +20,27 @@ import { db, auth, handleFirestoreError, OperationType } from './firebase';
 import { doc, setDoc, getDocs, collection, query, writeBatch } from 'firebase/firestore';
 import { enqueueOfflineSession } from './offlineSyncService';
 import { startFirestoreSync, finishFirestoreSync, errorFirestoreSync } from './syncStatusService';
+import {
+  initDB,
+  dbGetClassrooms,
+  dbSaveClassrooms,
+  dbGetStudents,
+  dbSaveStudents,
+  dbGetSubjects,
+  dbSaveSubjects,
+  dbGetTimetable,
+  dbSaveTimetable,
+  dbGetSessions,
+  dbSaveSession,
+  dbSaveAttendanceDecision,
+  dbGetDraftSession,
+  dbSaveDraftSession,
+  dbClearDraftSession,
+  dbGetTeacherProfile,
+  dbSaveTeacherProfile,
+  requestPersistentStorage,
+  AttendanceDecisionLog,
+} from './db/indexedDBService';
 
 const KEYS = {
   CLASSROOMS: 'swipeattend_classrooms',
@@ -56,6 +77,10 @@ export const getStoredTeacher = (): TeacherProfile => {
   try {
     const raw = localStorage.getItem(KEYS.TEACHER);
     memCache.teacher = raw ? JSON.parse(raw) : mockTeacherProfile;
+    if (memCache.teacher && (memCache.teacher.avatarUrl?.endsWith('.svg') || !memCache.teacher.avatarUrl)) {
+      memCache.teacher.avatarUrl = mockTeacherProfile.avatarUrl;
+      localStorage.setItem(KEYS.TEACHER, JSON.stringify(memCache.teacher));
+    }
   } catch {
     memCache.teacher = mockTeacherProfile;
   }
@@ -71,18 +96,34 @@ export const getStoredClassrooms = (): Classroom[] => {
       memCache.classrooms = mockClassrooms;
     } else {
       let parsed: Classroom[] = JSON.parse(raw);
-      parsed = parsed.map((cls) => {
-        if (cls.id === 'class-ee-1j' || cls.id === 'class-me-1f') {
-          return { ...cls, studentCount: 25 };
-        }
-        if (cls.id === 'class-cse-3a') {
-          return { ...cls, studentCount: 72 };
-        }
-        if (cls.id === 'class-cse-3b') {
-          return { ...cls, studentCount: 72 };
-        }
-        return cls;
-      });
+      // Ensure Mathematics (72), BEE (72), Physics (60) are always present and accurate
+      const hasPhysics = parsed.some((c) => c.id === 'class-phy-1a');
+      if (!hasPhysics) {
+        parsed = mockClassrooms;
+      } else {
+        parsed = parsed.map((cls) => {
+          const updated = { ...cls };
+          if (updated.year === '3rd Year') {
+            updated.year = '1st Year';
+          }
+          if (updated.name?.includes('3rd Year')) {
+            updated.name = updated.name.replace(/3rd Year/g, '1st Year');
+          }
+          if (cls.id === 'class-ee-1j' || cls.id === 'class-me-1f') {
+            return { ...updated, studentCount: 25 };
+          }
+          if (cls.id === 'class-cse-3a') {
+            return { ...updated, year: '1st Year', name: 'B.Tech CSE - 1st Year - Section A', studentCount: 72 };
+          }
+          if (cls.id === 'class-cse-3b') {
+            return { ...updated, year: '1st Year', name: 'B.Tech CSE - 1st Year - Section B', studentCount: 72 };
+          }
+          if (cls.id === 'class-phy-1a') {
+            return { ...updated, studentCount: 60 };
+          }
+          return updated;
+        });
+      }
       memCache.classrooms = parsed;
     }
   } catch {
@@ -98,6 +139,9 @@ export const saveClassrooms = (classrooms: Classroom[]) => {
   } catch (e) {
     console.error('Failed to save classrooms', e);
   }
+  dbSaveClassrooms(classrooms).catch((err) => {
+    console.warn('IndexedDB saveClassrooms error:', err);
+  });
 };
 
 export const getStoredStudents = (): Student[] => {
@@ -109,20 +153,13 @@ export const getStoredStudents = (): Student[] => {
       memCache.students = mockStudents;
     } else {
       let parsed: Student[] = JSON.parse(raw);
-      // Auto-migrate: If CSE (72 students), EE (25 students), or ME (25 students) are incomplete, update with complete rosters
       const cseCount = parsed.filter((s) => s.classroomId === 'class-cse-3a').length;
-      const eeCount = parsed.filter((s) => s.classroomId === 'class-ee-1j').length;
-      const meCount = parsed.filter((s) => s.classroomId === 'class-me-1f').length;
+      const beeCount = parsed.filter((s) => s.classroomId === 'class-cse-3b').length;
+      const phyCount = parsed.filter((s) => s.classroomId === 'class-phy-1a').length;
       
       let rosterUpdated = false;
-      if (cseCount < 72 || eeCount < 10 || meCount < 10) {
-        const cseMock = mockStudents.filter((s) => s.classroomId === 'class-cse-3a');
-        const eeMock = mockStudents.filter((s) => s.classroomId === 'class-ee-1j');
-        const meMock = mockStudents.filter((s) => s.classroomId === 'class-me-1f');
-        const otherStudents = parsed.filter(
-          (s) => s.classroomId !== 'class-cse-3a' && s.classroomId !== 'class-ee-1j' && s.classroomId !== 'class-me-1f'
-        );
-        parsed = [...cseMock, ...otherStudents, ...eeMock, ...meMock];
+      if (cseCount < 72 || beeCount < 72 || phyCount < 60) {
+        parsed = mockStudents;
         rosterUpdated = true;
       }
 
@@ -157,17 +194,43 @@ export const getStoredStudents = (): Student[] => {
         }
       });
 
-      // Ensure all students have clear local portrait SVGs or JPGs
+      // Ensure all students have authentic names and photographic JPG portraits
       let needsSave = rosterUpdated;
+      const mockMap = new Map<string, Student>();
+      mockStudents.forEach((ms) => mockMap.set(ms.id, ms));
+
       parsed = parsed.map((s, idx) => {
-        if (!s.avatarUrl || s.avatarUrl.includes('unsplash.com')) {
+        let updatedStudent = { ...s };
+        const mockMatch = mockMap.get(updatedStudent.id);
+
+        if (
+          updatedStudent.name.startsWith('Student CSE') ||
+          !updatedStudent.avatarUrl ||
+          updatedStudent.avatarUrl.endsWith('.svg') ||
+          updatedStudent.avatarUrl.includes('unsplash.com')
+        ) {
+          if (mockMatch) {
+            updatedStudent.name = mockMatch.name;
+            updatedStudent.avatarUrl = mockMatch.avatarUrl;
+            updatedStudent.email = mockMatch.email;
+          } else if (updatedStudent.classroomId === 'class-cse-3a') {
+            const rollIdx = (parseInt(updatedStudent.rollNo.replace(/\D/g, ''), 10) || (idx + 1)) - 1;
+            const safeIdx = Math.min(Math.max(rollIdx, 0), 71);
+            const fallbackStudent = mockStudents[safeIdx];
+            if (fallbackStudent) {
+              updatedStudent.name = fallbackStudent.name;
+              updatedStudent.avatarUrl = fallbackStudent.avatarUrl;
+              updatedStudent.email = fallbackStudent.email;
+            }
+          }
           needsSave = true;
-          return {
-            ...s,
-            avatarUrl: `/student-portraits/portrait-${(idx % 28) + 1}.svg`,
-          };
         }
-        return s;
+
+        if (updatedStudent.semester?.includes('3rd Year')) {
+          updatedStudent.semester = updatedStudent.semester.replace(/3rd Year/g, '1st Year').replace(/5th Semester/g, '1st Semester').replace(/5th Sem/g, '1st Sem');
+          needsSave = true;
+        }
+        return updatedStudent;
       });
 
       if (needsSave) {
@@ -185,38 +248,42 @@ export const saveStudents = (students: Student[]) => {
   memCache.students = students;
   try {
     localStorage.setItem(KEYS.STUDENTS, JSON.stringify(students));
-    if (auth.currentUser) {
-      // Async write with batching to avoid flooding
-      const batch = writeBatch(db);
-      students.slice(0, 450).forEach((std) => {
-        batch.set(doc(db, 'students', std.id), std, { merge: true });
-      });
-      batch.commit().catch(() => {});
-    }
   } catch (e) {
     console.error('Failed to save students', e);
   }
+  dbSaveStudents(students).catch((err) => {
+    console.warn('IndexedDB saveStudents error:', err);
+  });
+  if (auth.currentUser) {
+    // Async write with batching to avoid flooding
+    const batch = writeBatch(db);
+    students.slice(0, 450).forEach((std) => {
+      batch.set(doc(db, 'students', std.id), std, { merge: true });
+    });
+    batch.commit().catch(() => {});
+  }
 };
 
-const CURRENT_DATA_VERSION = 'v2026_math_bee_physics';
+const CURRENT_DATA_VERSION = 'v2026_math72_bee72_physics60_photos';
 
 /**
- * Universal sanitizers to ensure legacy "Database Management System", "Operating Systems",
- * and "Computer Networks" classes are immediately updated across the whole app to
- * Mathematics, Basic electrical engineering(BEE), and Physics.
+ * Universal sanitizers to ensure subjects and timetable entries are always
+ * accurately set to Mathematics (72), BEE (72), and Physics (60).
  */
 export const sanitizeSubject = (sub: Subject): Subject => {
   if (
     sub.name === 'Database Management System' ||
     sub.id === 'sub-dbms' ||
     sub.code === 'CS501' ||
-    sub.name.toLowerCase().includes('database')
+    sub.name.toLowerCase().includes('database') ||
+    sub.name.toLowerCase().includes('math')
   ) {
     return {
       ...sub,
       id: 'sub-dbms',
       name: 'Mathematics',
       code: 'MA101',
+      classroomId: 'class-cse-3a',
       teacherName: sub.teacherName || 'Dr. Ankit Sharma',
     };
   }
@@ -224,13 +291,16 @@ export const sanitizeSubject = (sub: Subject): Subject => {
     sub.name === 'Operating Systems' ||
     sub.id === 'sub-os' ||
     sub.code === 'CS502' ||
-    sub.name.toLowerCase().includes('operating system')
+    sub.name.toLowerCase().includes('operating system') ||
+    sub.name.toLowerCase().includes('bee') ||
+    sub.name.toLowerCase().includes('electrical')
   ) {
     return {
       ...sub,
       id: 'sub-os',
       name: 'Basic electrical engineering(BEE)',
       code: 'EE101',
+      classroomId: 'class-cse-3b',
       teacherName: sub.teacherName || 'Prof. R. K. Mahato',
     };
   }
@@ -238,13 +308,15 @@ export const sanitizeSubject = (sub: Subject): Subject => {
     sub.name === 'Computer Networks' ||
     sub.id === 'sub-cn' ||
     sub.code === 'CS503' ||
-    sub.name.toLowerCase().includes('computer network')
+    sub.name.toLowerCase().includes('computer network') ||
+    sub.name.toLowerCase().includes('physic')
   ) {
     return {
       ...sub,
       id: 'sub-cn',
       name: 'Physics',
       code: 'PH101',
+      classroomId: 'class-phy-1a',
       teacherName: sub.teacherName || 'Dr. S. K. Singh',
     };
   }
@@ -253,16 +325,26 @@ export const sanitizeSubject = (sub: Subject): Subject => {
 
 export const sanitizeTimetable = (item: TimetableEntry): TimetableEntry => {
   let subName = item.subjectName;
-  if (subName === 'Database Management System' || item.subjectId === 'sub-dbms' || subName.toLowerCase().includes('database')) {
+  let cId = item.classroomId;
+  let cName = item.classroomName;
+  if (subName === 'Database Management System' || item.subjectId === 'sub-dbms' || subName.toLowerCase().includes('database') || subName.toLowerCase().includes('math')) {
     subName = 'Mathematics';
-  } else if (subName === 'Operating Systems' || item.subjectId === 'sub-os' || subName.toLowerCase().includes('operating system')) {
+    cId = 'class-cse-3a';
+    cName = 'B.Tech CSE • 3rd Year • Section A';
+  } else if (subName === 'Operating Systems' || item.subjectId === 'sub-os' || subName.toLowerCase().includes('operating system') || subName.toLowerCase().includes('bee') || subName.toLowerCase().includes('electrical')) {
     subName = 'Basic electrical engineering(BEE)';
-  } else if (subName === 'Computer Networks' || item.subjectId === 'sub-cn' || subName.toLowerCase().includes('computer network')) {
+    cId = 'class-cse-3b';
+    cName = 'B.Tech CSE • 3rd Year • Section B';
+  } else if (subName === 'Computer Networks' || item.subjectId === 'sub-cn' || subName.toLowerCase().includes('computer network') || subName.toLowerCase().includes('physic')) {
     subName = 'Physics';
+    cId = 'class-phy-1a';
+    cName = 'B.Tech Engineering Physics • Sec C';
   }
   return {
     ...item,
     subjectName: subName,
+    classroomId: cId,
+    classroomName: cName,
   };
 };
 
@@ -339,6 +421,9 @@ export const saveSubjects = (subjects: Subject[]) => {
   } catch (e) {
     console.error('Failed to save subjects', e);
   }
+  dbSaveSubjects(sanitized).catch((err) => {
+    console.warn('IndexedDB saveSubjects error:', err);
+  });
 };
 
 export const getStoredTimetable = (): TimetableEntry[] => {
@@ -358,6 +443,19 @@ export const getStoredTimetable = (): TimetableEntry[] => {
     memCache.timetable = mockTimetable;
   }
   return memCache.timetable || mockTimetable;
+};
+
+export const saveTimetable = (timetable: TimetableEntry[]) => {
+  const sanitized = timetable.map(sanitizeTimetable);
+  memCache.timetable = sanitized;
+  try {
+    localStorage.setItem(KEYS.TIMETABLE, JSON.stringify(sanitized));
+  } catch (e) {
+    console.error('Failed to save timetable', e);
+  }
+  dbSaveTimetable(sanitized).catch((err) => {
+    console.warn('IndexedDB saveTimetable error:', err);
+  });
 };
 
 export const getStoredSessions = (): AttendanceSession[] => {
@@ -384,44 +482,68 @@ export const getStoredSessions = (): AttendanceSession[] => {
 };
 
 export const saveSession = (session: AttendanceSession): AttendanceSession[] => {
+  const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+  const sessionToSave: AttendanceSession = {
+    ...session,
+    updatedAt: new Date().toISOString(),
+    syncStatus: isOnline ? (auth.currentUser ? 'synced' : 'pending') : 'saved_offline',
+    isOfflineFinalized: true,
+  };
+
   const current = getStoredSessions();
-  const index = current.findIndex((s) => s.id === session.id);
+  const index = current.findIndex((s) => s.id === sessionToSave.id);
   let updated: AttendanceSession[];
   if (index >= 0) {
     updated = [...current];
-    updated[index] = session;
+    updated[index] = sessionToSave;
   } else {
-    updated = [session, ...current];
+    updated = [sessionToSave, ...current];
   }
   memCache.sessions = updated;
+
+  // 1. Primary persistence: IndexedDB
+  dbSaveSession(sessionToSave).catch((err) => {
+    console.warn('IndexedDB saveSession error:', err);
+  });
+
+  // 2. Synchronous mirror: localStorage
   try {
     localStorage.setItem(KEYS.SESSIONS, JSON.stringify(updated));
     clearDraftSession();
 
     // Recalculate student statistics based on newly completed session
-    updateStudentAttendanceStats(session);
+    updateStudentAttendanceStats(sessionToSave);
 
     // If offline, queue for automatic sync when connectivity returns
-    if (typeof navigator !== 'undefined' && !navigator.onLine) {
-      enqueueOfflineSession(session);
-    }
-
-    // If authenticated with Firebase, sync to Firestore cloud with real-time feedback
-    if (auth.currentUser) {
+    if (!isOnline) {
+      enqueueOfflineSession(sessionToSave);
+    } else if (auth.currentUser) {
+      // If authenticated with Firebase, sync to Firestore cloud with real-time feedback
       startFirestoreSync('Syncing session to Firestore...');
-      setDoc(doc(db, 'attendance_sessions', session.id), session)
+      setDoc(doc(db, 'attendance_sessions', sessionToSave.id), sessionToSave)
         .then(() => {
           finishFirestoreSync('Session synced to Firestore');
         })
         .catch((err) => {
-          handleFirestoreError(err, OperationType.WRITE, `attendance_sessions/${session.id}`);
+          handleFirestoreError(err, OperationType.WRITE, `attendance_sessions/${sessionToSave.id}`);
           errorFirestoreSync('Firestore sync failed');
+          // Fallback enqueue so changes are safely preserved and retried
+          enqueueOfflineSession(sessionToSave);
         });
+    } else {
+      // Not logged in to cloud: queue as pending sync
+      enqueueOfflineSession(sessionToSave);
     }
   } catch (e) {
-    console.error('Failed to save session', e);
+    console.error('Failed to save session to localStorage mirror', e);
   }
   return updated;
+};
+
+export const saveAttendanceDecision = (decision: AttendanceDecisionLog) => {
+  dbSaveAttendanceDecision(decision).catch((err) => {
+    console.warn('IndexedDB saveAttendanceDecision error:', err);
+  });
 };
 
 // High-speed parallel Firestore sync using writeBatch
@@ -546,6 +668,9 @@ export const saveDraftSession = (draft: DraftSessionState) => {
   } catch (e) {
     console.error('Failed to save draft session', e);
   }
+  dbSaveDraftSession(draft).catch((err) => {
+    console.warn('IndexedDB saveDraftSession error:', err);
+  });
 };
 
 export const clearDraftSession = () => {
@@ -555,6 +680,9 @@ export const clearDraftSession = () => {
   } catch (e) {
     console.error('Failed to clear draft session', e);
   }
+  dbClearDraftSession().catch((err) => {
+    console.warn('IndexedDB clearDraftSession error:', err);
+  });
 };
 
 // Reset to initial BIT Sindri seed data
@@ -577,7 +705,108 @@ export const resetToSeedData = () => {
   } catch (e) {
     console.error('Failed to reset seed data', e);
   }
+
+  // Also reset IndexedDB
+  Promise.all([
+    dbSaveClassrooms(mockClassrooms),
+    dbSaveStudents(mockStudents),
+    dbSaveSubjects(mockSubjects),
+    dbSaveTimetable(mockTimetable),
+    dbClearDraftSession(),
+    dbSaveTeacherProfile(mockTeacherProfile),
+  ]).catch((err) => {
+    console.warn('Error resetting IndexedDB seed data:', err);
+  });
 };
+
+/**
+ * Hydrates in-memory caches from IndexedDB on startup.
+ * If IndexedDB is empty, seeds with default BIT Sindri records.
+ */
+export async function initStorageAsync(): Promise<void> {
+  try {
+    await initDB();
+    requestPersistentStorage().catch(() => {});
+
+    // 1. Classrooms
+    const idbClasses = await dbGetClassrooms();
+    if (idbClasses && idbClasses.length > 0) {
+      memCache.classrooms = idbClasses;
+    } else {
+      const initial = getStoredClassrooms();
+      await dbSaveClassrooms(initial).catch(() => {});
+    }
+
+    // 2. Students
+    const idbStudents = await dbGetStudents();
+    if (idbStudents && idbStudents.length > 0) {
+      const hasPlaceholders = idbStudents.some(
+        (s) => s.name?.startsWith('Student CSE') || s.avatarUrl?.endsWith('.svg')
+      );
+      if (hasPlaceholders) {
+        const freshStudents = getStoredStudents();
+        memCache.students = freshStudents;
+        await dbSaveStudents(freshStudents).catch(() => {});
+      } else {
+        memCache.students = idbStudents;
+      }
+    } else {
+      const initial = getStoredStudents();
+      await dbSaveStudents(initial).catch(() => {});
+    }
+
+    // 3. Subjects
+    const idbSubjects = await dbGetSubjects();
+    if (idbSubjects && idbSubjects.length > 0) {
+      memCache.subjects = idbSubjects;
+    } else {
+      const initial = getStoredSubjects();
+      await dbSaveSubjects(initial).catch(() => {});
+    }
+
+    // 4. Timetable
+    const idbTimetable = await dbGetTimetable();
+    if (idbTimetable && idbTimetable.length > 0) {
+      memCache.timetable = idbTimetable;
+    } else {
+      const initial = getStoredTimetable();
+      await dbSaveTimetable(initial).catch(() => {});
+    }
+
+    // 5. Sessions
+    const idbSessions = await dbGetSessions();
+    if (idbSessions && idbSessions.length > 0) {
+      memCache.sessions = idbSessions;
+    } else {
+      const initial = getStoredSessions();
+      for (const sess of initial) {
+        await dbSaveSession(sess).catch(() => {});
+      }
+    }
+
+    // 6. Draft Session
+    const idbDraft = await dbGetDraftSession();
+    if (idbDraft && idbDraft.session) {
+      memCache.draftSession = {
+        session: idbDraft.session,
+        currentIndex: idbDraft.currentIndex,
+        historyStack: idbDraft.historyStack,
+        updatedAt: idbDraft.updatedAt,
+      };
+    }
+
+    // 7. Teacher Profile
+    const idbTeacher = await dbGetTeacherProfile();
+    if (idbTeacher && !idbTeacher.avatarUrl?.endsWith('.svg')) {
+      memCache.teacher = idbTeacher;
+    } else {
+      const initial = getStoredTeacher();
+      await dbSaveTeacherProfile(initial).catch(() => {});
+    }
+  } catch (err) {
+    console.warn('Storage async hydration from IndexedDB encountered an error, fallback to synchronous cache:', err);
+  }
+}
 
 // Attendance shortage calculator math
 // (attended + X) / (held + X) >= target / 100

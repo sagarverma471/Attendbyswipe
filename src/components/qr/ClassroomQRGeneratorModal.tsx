@@ -33,10 +33,14 @@ import {
   UserCheck,
   Plus,
   User,
+  Wifi,
+  Globe,
+  Radio,
 } from 'lucide-react';
 import { Classroom, Student, Subject, QRAttendanceSession, AttendanceSession, QRSubmissionRecord } from '../../types/attendance';
 import { SwipeAttendLogo } from '../common/SwipeAttendLogo';
 import { CameraQRScanner, DecodedQRData } from './CameraQRScanner';
+import { QRScannerGuideModal } from './QRScannerGuideModal';
 import {
   createQRAttendanceSession,
   rotateSessionToken,
@@ -84,6 +88,24 @@ export const ClassroomQRGeneratorModal: React.FC<ClassroomQRGeneratorModalProps>
   const [rightColumnTab, setRightColumnTab] = useState<'feed' | 'quickMark'>('feed');
   const [kioskStatusMsg, setKioskStatusMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [quickRollInput, setQuickRollInput] = useState<string>('');
+  const [isGuideOpen, setIsGuideOpen] = useState<boolean>(false);
+  const [qrNetworkMode, setQrNetworkMode] = useState<'cloud' | 'hotspot'>('cloud');
+  const [hotspotUrl, setHotspotUrl] = useState<string>('http://192.168.43.1:3000');
+  const [detectedInterfaces, setDetectedInterfaces] = useState<{ name: string; address: string; localUrl: string }[]>([]);
+
+  // Detect local IP address on LAN/hotspot for offline student phone communication
+  useEffect(() => {
+    if (!isOpen) return;
+    fetch('/api/network-interfaces')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.interfaces && data.interfaces.length > 0) {
+          setDetectedInterfaces(data.interfaces);
+          setHotspotUrl(data.defaultLocalUrl || data.interfaces[0].localUrl);
+        }
+      })
+      .catch(() => {});
+  }, [isOpen]);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const modalContainerRef = useRef<HTMLDivElement | null>(null);
@@ -184,7 +206,7 @@ export const ClassroomQRGeneratorModal: React.FC<ClassroomQRGeneratorModalProps>
     return () => clearInterval(interval);
   }, [session?.id, session?.status, session?.currentToken, session?.tokenExpiresAt]);
 
-  // Construct Student Scan URL (Points to public Shared App URL without 403 Google Auth restriction)
+  // Construct Student Scan URL (Supports Cloud Online URL or Local-Network Wi-Fi Hotspot URL)
   const studentScanUrl = useMemo(() => {
     if (!session) return '';
     return buildStudentScanAttendanceUrl({
@@ -196,8 +218,18 @@ export const ClassroomQRGeneratorModal: React.FC<ClassroomQRGeneratorModalProps>
       section: classroom.section,
       teacherName: teacherName,
       token: session.currentToken,
+      customBaseUrl: qrNetworkMode === 'hotspot' ? hotspotUrl : undefined,
     });
-  }, [session, classroom.name, classroom.department, classroom.section, subject?.name, teacherName]);
+  }, [
+    session,
+    classroom.name,
+    classroom.department,
+    classroom.section,
+    subject?.name,
+    teacherName,
+    qrNetworkMode,
+    hotspotUrl,
+  ]);
 
   // Draw QR code onto canvas whenever token or URL updates
   useEffect(() => {
@@ -496,6 +528,16 @@ export const ClassroomQRGeneratorModal: React.FC<ClassroomQRGeneratorModalProps>
               </button>
             </div>
 
+            {/* Camera Scan Guide Onboarding Button */}
+            <button
+              onClick={() => setIsGuideOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/35 border border-cyan-500/35 text-cyan-200 hover:text-white text-xs font-bold transition-all cursor-pointer shadow-xs"
+              title="Interactive guide on how students scan with their phone camera"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Camera Scan Guide</span>
+            </button>
+
             {/* Test Student Scan Trigger */}
             {onOpenStudentScanView && session && (
               <button
@@ -541,6 +583,75 @@ export const ClassroomQRGeneratorModal: React.FC<ClassroomQRGeneratorModalProps>
           <div className="flex-1 overflow-y-auto py-5 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             {/* Left Column: QR Code & Security Controls (7 cols) */}
             <div className="lg:col-span-7 flex flex-col items-center text-center space-y-4">
+              {/* QR Transmission Architecture Mode Selector */}
+              <div className="w-full bg-[#101526] p-1.5 rounded-2xl border border-white/10 flex items-center gap-1.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setQrNetworkMode('cloud')}
+                  className={`flex-1 py-1.5 px-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    qrNetworkMode === 'cloud'
+                      ? 'bg-violet-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  <span>Mode A: Cloud Online QR</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQrNetworkMode('hotspot')}
+                  className={`flex-1 py-1.5 px-2.5 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                    qrNetworkMode === 'hotspot'
+                      ? 'bg-amber-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Wifi className="w-3.5 h-3.5" />
+                  <span>Mode B: Local Wi-Fi Hotspot (Offline)</span>
+                </button>
+              </div>
+
+              {/* Mode B Info & Local Host IP settings */}
+              {qrNetworkMode === 'hotspot' && (
+                <div className="w-full p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-left space-y-2 animate-fade-in">
+                  <div className="flex items-center justify-between text-xs font-bold text-amber-300">
+                    <div className="flex items-center gap-1.5">
+                      <Radio className="w-4 h-4 text-amber-400 animate-pulse" />
+                      <span>Local Classroom Wi-Fi Network Mode</span>
+                    </div>
+                    <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded-md font-mono">
+                      No Internet Needed
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    Students connect their phone Wi-Fi to your teacher hotspot. The QR code links directly to this local server. Incoming submissions are saved into this device's IndexedDB.
+                  </p>
+                  <div className="flex items-center gap-2 pt-1 flex-wrap">
+                    <span className="text-[11px] text-slate-400 font-mono shrink-0">Server IP:</span>
+                    <input
+                      type="text"
+                      value={hotspotUrl}
+                      onChange={(e) => setHotspotUrl(e.target.value)}
+                      placeholder="http://192.168.43.1:3000"
+                      className="flex-1 min-w-[180px] px-2.5 py-1 text-xs font-mono bg-[#0D111E] border border-white/10 rounded-lg text-amber-200 focus:outline-none focus:border-amber-400"
+                    />
+                    {detectedInterfaces.length > 0 && (
+                      <select
+                        onChange={(e) => setHotspotUrl(e.target.value)}
+                        value={hotspotUrl}
+                        className="px-2 py-1 text-[11px] font-mono bg-[#141A2E] border border-white/10 rounded-lg text-slate-300 cursor-pointer"
+                      >
+                        {detectedInterfaces.map((iface) => (
+                          <option key={iface.address} value={iface.localUrl}>
+                            {iface.name}: {iface.address}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Anti-Proxy Security Shield Banner */}
               <div className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-violet-950/30 border border-violet-500/20 text-xs text-violet-200">
                 <div className="flex items-center gap-2">
@@ -1263,6 +1374,13 @@ export const ClassroomQRGeneratorModal: React.FC<ClassroomQRGeneratorModalProps>
           </div>
         )}
       </div>
+
+      {/* Interactive Camera Scan Guide Onboarding Modal */}
+      <QRScannerGuideModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+        onOpenScanner={onOpenStudentScanView && session ? () => onOpenStudentScanView(session) : undefined}
+      />
     </div>
   );
 };

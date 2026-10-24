@@ -85,10 +85,10 @@ export const StudentSearchBar: React.FC<StudentSearchBarProps> = ({
 
   return (
     <div ref={searchContainerRef} className={`relative w-full ${className}`}>
-      {/* Compact & Quick Search Input Box */}
-      <div className="futuristic-glass cyber-corner border border-cyan-500/25 rounded-xl p-1 flex items-center gap-1.5 shadow-sm">
+      {/* Clean Search Input Box */}
+      <div className="bg-[#121826] border border-slate-800 rounded-xl p-1 flex items-center gap-1.5 shadow-sm">
         <div className="relative flex-1 flex items-center">
-          <Search className="w-3.5 h-3.5 text-cyan-400 absolute left-2.5 pointer-events-none shrink-0" />
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 pointer-events-none shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -100,7 +100,7 @@ export const StudentSearchBar: React.FC<StudentSearchBarProps> = ({
               setIsOpen(true);
             }}
             placeholder={placeholder}
-            className="w-full bg-[#080C1B]/90 border border-white/10 focus:border-cyan-400 rounded-lg pl-8 pr-7 py-1 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-500/40 transition-all font-['Plus_Jakarta_Sans']"
+            className="w-full bg-[#0B0F19] border border-slate-800 focus:border-violet-500 rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none transition-all font-['Plus_Jakarta_Sans']"
           />
           {query && (
             <button
@@ -124,11 +124,11 @@ export const StudentSearchBar: React.FC<StudentSearchBarProps> = ({
               setSelectedBranch(e.target.value);
               setIsOpen(true);
             }}
-            className="bg-[#0C1226] border border-cyan-500/30 hover:border-cyan-400/60 rounded-lg px-2 py-1 text-[11px] text-cyan-300 font-medium focus:outline-none cursor-pointer transition-colors"
+            className="bg-[#0B0F19] border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 font-medium focus:outline-none cursor-pointer transition-colors"
             title="Filter students by department"
           >
             {branches.map((b) => (
-              <option key={b} value={b} className="bg-[#0C1226] text-white">
+              <option key={b} value={b} className="bg-[#121826] text-white">
                 {b === 'All' ? 'All Depts' : b.replace('B.Tech ', '')}
               </option>
             ))}
@@ -137,26 +137,23 @@ export const StudentSearchBar: React.FC<StudentSearchBarProps> = ({
           {/* Quick Small Search Toggle */}
           <button
             onClick={() => setIsOpen((prev) => !prev)}
-            className="px-2 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1"
+            className="px-2 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1"
             title="Toggle student list"
           >
-            <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
           </button>
         </div>
       </div>
 
       {/* Dropdown Results Overlay */}
       {isOpen && (
-        <div className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl bg-[#080D20]/98 backdrop-blur-2xl border border-cyan-500/40 shadow-2xl shadow-black/80 max-h-[420px] overflow-hidden flex flex-col animate-fade-in">
+        <div className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl bg-[#121826] border border-slate-800 shadow-2xl max-h-[400px] overflow-hidden flex flex-col animate-fade-in">
           {/* Results Header */}
-          <div className="p-3 bg-[#0A1026] border-b border-white/10 flex items-center justify-between text-xs text-slate-300 font-mono">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              <span>
-                {filteredStudents.length} {filteredStudents.length === 1 ? 'Student Found' : 'Students Found'}
-                {query ? ` for "${query}"` : ''}
-              </span>
-            </div>
+          <div className="p-3 bg-[#0E1422] border-b border-slate-800 flex items-center justify-between text-xs text-slate-300">
+            <span className="font-semibold text-slate-200">
+              {filteredStudents.length} {filteredStudents.length === 1 ? 'Student' : 'Students'}
+              {query ? ` for "${query}"` : ''}
+            </span>
             <button
               onClick={() => setIsOpen(false)}
               className="text-slate-400 hover:text-white text-[11px] hover:underline cursor-pointer"

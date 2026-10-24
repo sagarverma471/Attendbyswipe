@@ -110,8 +110,9 @@ export function buildStudentScanAttendanceUrl(params: {
   section?: string;
   teacherName?: string;
   token: string;
+  customBaseUrl?: string;
 }): string {
-  const baseUrl = getPublicAttendanceBaseUrl();
+  const baseUrl = (params.customBaseUrl && params.customBaseUrl.trim()) || getPublicAttendanceBaseUrl();
   const url = new URL(baseUrl);
   url.searchParams.set('action', 'student-qr');
   url.searchParams.set('sessionId', params.sessionId);

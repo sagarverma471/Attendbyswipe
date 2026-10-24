@@ -26,7 +26,13 @@ import {
   DraftSessionState,
   syncAllToFirestore,
   loadAllFromFirestore,
+  initStorageAsync,
 } from './services/storage';
+import {
+  initOfflineSyncMonitoring,
+  enqueueOfflineStudent,
+  enqueueOfflineClassroom,
+} from './services/offlineSyncService';
 import {
   auth,
   signInWithGoogle,
@@ -165,11 +171,20 @@ export default function App() {
     }
   }, []);
 
-  // Ensure subjects, timetable, and sessions are immediately upgraded to Mathematics, BEE, Physics
+  // Initialize IndexedDB primary storage and offline sync monitoring
   useEffect(() => {
-    setSubjects(getStoredSubjects());
-    setTimetable(getStoredTimetable());
-    setSessions(getStoredSessions());
+    initOfflineSyncMonitoring();
+    initStorageAsync().then(() => {
+      setClassrooms(getStoredClassrooms());
+      setStudents(getStoredStudents());
+      setSubjects(getStoredSubjects());
+      setTimetable(getStoredTimetable());
+      setSessions(getStoredSessions());
+      const draft = getDraftSession();
+      if (draft) setDraftState(draft);
+    }).catch((err) => {
+      console.warn('initStorageAsync error:', err);
+    });
   }, []);
 
   // Firebase connection test & auth listener
@@ -225,12 +240,76 @@ export default function App() {
     setIsSyncing(false);
   };
 
-  // Start new Attendance Session from setup modal
+  const handleLaunchSession = useCallback((config: {
+    classroomId: string;
+    subjectId: string;
+    date: string;
+    period: number;
+    order: 'roll' | 'name' | 'random';
+    notes?: string;
+  }) => {
+    const currentClass = classrooms.find((c) => c.id === config.classroomId);
+    const currentSub = subjects.find((s) => s.id === config.subjectId);
+    const enrolledStudents = students.filter((s) => s.classroomId === config.classroomId);
+
+    const initialRecords: Record<string, AttendanceStatus> = {};
+    enrolledStudents.forEach((s) => {
+      initialRecords[s.id] = 'unmarked';
+    });
+
+    const newSession: AttendanceSession = {
+      id: `session-${Date.now()}`,
+      classroomId: config.classroomId,
+      classroomName: currentClass?.name || 'Classroom',
+      subjectId: config.subjectId,
+      subjectName: currentSub?.name || 'Subject',
+      date: config.date,
+      period: config.period,
+      markedBy: teacher.name,
+      status: 'draft',
+      records: initialRecords,
+      totalStudents: enrolledStudents.length,
+      presentCount: 0,
+      absentCount: 0,
+      unmarkedCount: enrolledStudents.length,
+      createdAt: new Date().toISOString(),
+      notes: config.notes,
+    };
+
+    setActiveSession(newSession);
+    setCurrentSessionIndex(0);
+    setIsSetupModalOpen(false);
+    setActiveView('attendance-swipe');
+  }, [classrooms, subjects, students, teacher.name]);
+
+  // Start new Attendance Session directly from card without prompting
   const handleStartAttendance = useCallback((classroomId: string, subjectId: string) => {
-    setSetupInitialClassId(classroomId);
-    setSetupInitialSubId(subjectId);
-    setIsSetupModalOpen(true);
-  }, []);
+    // Check if an in-progress draft already exists for this class
+    const draft = getDraftSession();
+    if (draft?.session && draft.session.classroomId === classroomId && draft.session.subjectId === subjectId) {
+      setActiveSession(draft.session);
+      setCurrentSessionIndex(draft.currentIndex || 0);
+      setActiveView('attendance-swipe');
+      return;
+    }
+
+    const targetClass = classrooms.find((c) => c.id === classroomId) || classrooms[0];
+    const targetSub = subjects.find((s) => s.id === subjectId) || subjects[0];
+
+    if (targetClass && targetSub) {
+      handleLaunchSession({
+        classroomId: targetClass.id,
+        subjectId: targetSub.id,
+        date: new Date().toISOString().split('T')[0],
+        period: 2,
+        order: 'roll',
+      });
+    } else {
+      setSetupInitialClassId(classroomId);
+      setSetupInitialSubId(subjectId);
+      setIsSetupModalOpen(true);
+    }
+  }, [classrooms, subjects, handleLaunchSession]);
 
   // Launch Live QR Attendance Modal for a classroom
   const handleLaunchQRAttendance = useCallback(
@@ -275,48 +354,6 @@ export default function App() {
     setActiveSession(finalSession);
     setActiveView('attendance-summary');
   }, []);
-
-  const handleLaunchSession = (config: {
-    classroomId: string;
-    subjectId: string;
-    date: string;
-    period: number;
-    order: 'roll' | 'name' | 'random';
-    notes?: string;
-  }) => {
-    const currentClass = classrooms.find((c) => c.id === config.classroomId);
-    const currentSub = subjects.find((s) => s.id === config.subjectId);
-    const enrolledStudents = students.filter((s) => s.classroomId === config.classroomId);
-
-    const initialRecords: Record<string, AttendanceStatus> = {};
-    enrolledStudents.forEach((s) => {
-      initialRecords[s.id] = 'unmarked';
-    });
-
-    const newSession: AttendanceSession = {
-      id: `session-${Date.now()}`,
-      classroomId: config.classroomId,
-      classroomName: currentClass?.name || 'Classroom',
-      subjectId: config.subjectId,
-      subjectName: currentSub?.name || 'Subject',
-      date: config.date,
-      period: config.period,
-      markedBy: teacher.name,
-      status: 'draft',
-      records: initialRecords,
-      totalStudents: enrolledStudents.length,
-      presentCount: 0,
-      absentCount: 0,
-      unmarkedCount: enrolledStudents.length,
-      createdAt: new Date().toISOString(),
-      notes: config.notes,
-    };
-
-    setActiveSession(newSession);
-    setCurrentSessionIndex(0);
-    setIsSetupModalOpen(false);
-    setActiveView('attendance-swipe');
-  };
 
   // Real-time progress update while swiping (saves draft and syncs activeSession so summary and resume stay completely in sync)
   const handleUpdateSessionProgress = useCallback(
@@ -389,13 +426,17 @@ export default function App() {
   const handleAddStudent = useCallback((newStd: Omit<Student, 'id'>) => {
     const std: Student = {
       ...newStd,
-      id: `std-${Date.now()}`,
+      id: `std-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      avatarUrl: newStd.avatarUrl || `/student-portraits/portrait-${Math.floor(Math.random() * 28) + 1}.svg`,
     };
     setStudents((prev) => {
       const updated = [std, ...prev];
       saveStudents(updated);
       return updated;
     });
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      enqueueOfflineStudent(std, 'create');
+    }
   }, []);
 
   const handleImportStudents = useCallback((imported: Student[]) => {
@@ -491,11 +532,18 @@ export default function App() {
 
   // Classroom Manager Handlers
   const handleCreateClassroom = useCallback((newCls: Classroom) => {
+    const cls: Classroom = {
+      ...newCls,
+      id: newCls.id || `class-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    };
     setClassrooms((prev) => {
-      const updated = [newCls, ...prev];
+      const updated = [cls, ...prev];
       saveClassrooms(updated);
       return updated;
     });
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      enqueueOfflineClassroom(cls, 'create');
+    }
   }, []);
 
   // Stable navigation callbacks to prevent memoized dashboard re-renders
@@ -665,7 +713,7 @@ export default function App() {
     <ToastProvider>
       <OfflineToastWatcher />
       <RetroCRTScreen>
-        <div className="min-h-screen bg-[#070A12] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
+        <div className="min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
         {/* Top Navigation Bar */}
         <Navbar
         currentRole={role}
@@ -741,6 +789,8 @@ export default function App() {
               students={students}
               onUpdateSession={handleUpdateHistoricalSession}
               onBack={() => setActiveView('dashboard')}
+              onResumeDraft={handleResumeDraft}
+              hasDraftSession={!!draftState}
             />
           )}
 

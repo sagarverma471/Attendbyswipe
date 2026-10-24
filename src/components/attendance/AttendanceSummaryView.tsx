@@ -28,8 +28,6 @@ import { StudentAttendanceSummaryRow } from '../cards/StudentCard';
 import { ResponsiveTableWrapper } from '../common/ResponsiveTableWrapper';
 import { formatClassDate } from '../../utils/dateUtils';
 import { getDraftSession } from '../../services/storage';
-import { exportSessionToGoogleSheet } from '../../services/workspace/googleSheetsService';
-import { getCachedAccessToken, signInWithGoogle } from '../../services/firebase';
 
 export function getStudentAttendanceStatus(
   records: Record<string, AttendanceStatus> | undefined,
@@ -101,13 +99,6 @@ export const AttendanceSummaryView: React.FC<AttendanceSummaryViewProps> = ({
   });
   const [filter, setFilter] = useState<'all' | 'present' | 'absent' | 'unmarked'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Google Sheets Export State
-  const [isExportingSheet, setIsExportingSheet] = useState(false);
-  const [showConfirmSheetModal, setShowConfirmSheetModal] = useState(false);
-  const [sheetExportResult, setSheetExportResult] = useState<{ url: string; title: string } | null>(null);
-  const [sheetError, setSheetError] = useState<string | null>(null);
-  const [sheetCopied, setSheetCopied] = useState(false);
 
   // Sync state whenever session or draft updates
   useEffect(() => {
@@ -241,53 +232,6 @@ export const AttendanceSummaryView: React.FC<AttendanceSummaryViewProps> = ({
     window.print();
   };
 
-  const handleExportGoogleSheet = async () => {
-    setShowConfirmSheetModal(false);
-    setIsExportingSheet(true);
-    setSheetError(null);
-
-    try {
-      let token = getCachedAccessToken();
-      if (!token) {
-        const authRes = await signInWithGoogle();
-        token = authRes.accessToken || null;
-      }
-
-      if (!token) {
-        throw new Error('Google Sign-In required to export to Google Sheets');
-      }
-
-      const finalRecords: Record<string, AttendanceStatus> = {};
-      students.forEach((s) => {
-        finalRecords[s.id] = studentStatuses[s.id] || 'unmarked';
-      });
-
-      const sessionToExport: AttendanceSession = {
-        ...session,
-        records: finalRecords,
-        presentCount,
-        absentCount,
-        unmarkedCount,
-        totalStudents: students.length,
-      };
-
-      const result = await exportSessionToGoogleSheet(sessionToExport, students, token);
-
-      if (result.success && result.url) {
-        setSheetExportResult({
-          url: result.url,
-          title: result.title || `SwipeAttend - ${session.subjectName} - ${session.date}`,
-        });
-      } else {
-        throw new Error(result.error || 'Failed to export to Google Sheets');
-      }
-    } catch (err: any) {
-      console.error('Google Sheets export failed:', err);
-      setSheetError(err.message || 'Failed to export to Google Sheets');
-    } finally {
-      setIsExportingSheet(false);
-    }
-  };
 
   const handleSave = () => {
     const finalRecords: Record<string, AttendanceStatus> = {};
@@ -362,25 +306,8 @@ export const AttendanceSummaryView: React.FC<AttendanceSummaryViewProps> = ({
 
           <div className="flex items-center gap-1.5 flex-wrap">
             <button
-              onClick={() => {
-                setSheetError(null);
-                setShowConfirmSheetModal(true);
-              }}
-              disabled={isExportingSheet}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold hover:bg-emerald-600/30 transition-all cursor-pointer min-h-[36px] disabled:opacity-50"
-              title="Export this attendance session directly to Google Sheets"
-            >
-              {isExportingSheet ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
-              ) : (
-                <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-              )}
-              <span>Google Sheet</span>
-            </button>
-
-            <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#141A2E] border border-white/10 text-xs font-semibold text-slate-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer min-h-[36px]"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-violet-600/20 text-violet-300 border border-violet-500/30 hover:bg-violet-600/30 text-xs font-semibold hover:text-white transition-colors cursor-pointer min-h-[36px]"
               title="Download CSV report"
             >
               <Download className="w-3.5 h-3.5 shrink-0 text-violet-400" />
@@ -398,62 +325,6 @@ export const AttendanceSummaryView: React.FC<AttendanceSummaryViewProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Google Sheets Export Result Banner */}
-      {sheetExportResult && (
-        <div className="bg-emerald-950/40 border border-emerald-500/40 rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3 animate-fade-in text-xs shadow-lg">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-            <div className="min-w-0">
-              <span className="text-emerald-200 font-bold block truncate">
-                {sheetExportResult.title}
-              </span>
-              <span className="text-[11px] text-emerald-300/80">
-                Created directly in your Google Drive via Google Sheets API
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <a
-              href={sheetExportResult.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer shadow-md"
-            >
-              <span>Open in Google Sheets</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-            <button
-              type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(sheetExportResult.url);
-                setSheetCopied(true);
-                setTimeout(() => setSheetCopied(false), 2500);
-              }}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-900/60 hover:bg-emerald-800/80 border border-emerald-500/30 text-emerald-300 text-xs font-medium transition-colors cursor-pointer"
-            >
-              <Copy className="w-3 h-3" />
-              <span>{sheetCopied ? 'Copied!' : 'Copy'}</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Google Sheets Error Notice */}
-      {sheetError && (
-        <div className="p-3 rounded-2xl bg-red-950/40 border border-red-500/30 text-red-300 text-xs flex items-center justify-between gap-3 animate-fade-in">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-            <span>{sheetError}</span>
-          </div>
-          <button
-            onClick={() => setSheetError(null)}
-            className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 cursor-pointer"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      )}
 
       {/* 4 Metric Cards (Single-column on mobile, 2x2 Grid on tablet, 4-column row on Desktop via auto-fit) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] sm:[grid-template-columns:repeat(auto-fit,minmax(220px,1fr))] w-full">
@@ -717,7 +588,18 @@ export const AttendanceSummaryView: React.FC<AttendanceSummaryViewProps> = ({
       {/* Bottom Confirmation CTA (Mobile-Friendly Full-Width Stack) */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-[#101526] border border-white/10 shadow-xl w-full">
         <div className="min-w-0">
-          <p className="text-xs sm:text-sm font-bold text-white">Save session to database</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-xs sm:text-sm font-bold text-white">Save session to database</p>
+            {typeof navigator !== 'undefined' && navigator.onLine ? (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-medium font-mono">
+                Cloud Sync Ready
+              </span>
+            ) : (
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-medium font-mono">
+                Saved on this device — waiting to sync
+              </span>
+            )}
+          </div>
           <p className="text-[11px] text-slate-400 truncate">
             {presentCount} Present · {absentCount} Absent · {unmarkedCount} Unmarked
           </p>
@@ -726,25 +608,12 @@ export const AttendanceSummaryView: React.FC<AttendanceSummaryViewProps> = ({
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
           <button
             type="button"
-            onClick={() => {
-              setSheetError(null);
-              setShowConfirmSheetModal(true);
-            }}
-            disabled={isExportingSheet}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 font-semibold text-xs sm:text-sm transition-all cursor-pointer min-h-[44px] shadow-sm disabled:opacity-50"
-            title="Export this attendance session directly into a Google Sheet"
+            onClick={handleExportCSV}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 rounded-xl bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 text-cyan-300 font-semibold text-xs sm:text-sm transition-all cursor-pointer min-h-[44px] shadow-sm"
+            title="Download CSV report for this session"
           >
-            {isExportingSheet ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
-                <span>Exporting...</span>
-              </>
-            ) : (
-              <>
-                <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
-                <span>Export to Google Sheet</span>
-              </>
-            )}
+            <Download className="w-4 h-4 text-cyan-400" />
+            <span>Export CSV</span>
           </button>
 
           <button
@@ -756,54 +625,6 @@ export const AttendanceSummaryView: React.FC<AttendanceSummaryViewProps> = ({
           </button>
         </div>
       </div>
-
-      {/* Explicit User Confirmation Dialog for Workspace Export */}
-      {showConfirmSheetModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#101526] border border-emerald-500/30 rounded-2xl p-5 sm:p-6 max-w-sm w-full text-left space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
-                <FileSpreadsheet className="w-5 h-5" />
-                <span>Export to Google Sheets</span>
-              </div>
-              <button
-                onClick={() => setShowConfirmSheetModal(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-300 leading-relaxed">
-              This will create a new Google Sheet in your Google Drive with the current attendance records for:
-              <br />
-              <span className="font-mono text-emerald-300 font-semibold mt-1 block">
-                {session.subjectName} · {session.classroomName} ({session.date})
-              </span>
-              <br />
-              Including student roll numbers, attendance statuses, submission methods, and real-time statistics.
-            </p>
-
-            <div className="flex items-center justify-end gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowConfirmSheetModal(false)}
-                className="px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleExportGoogleSheet}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-all shadow-md cursor-pointer"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>Confirm & Export</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

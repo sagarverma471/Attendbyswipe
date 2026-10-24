@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { AttendanceSession, Student, AttendanceStatus } from '../../types/attendance';
 import {
   Calendar,
@@ -17,11 +17,7 @@ import {
   HelpCircle,
   Layers,
   Sparkles,
-  FileSpreadsheet,
-  ExternalLink,
-  Loader2,
-  AlertTriangle,
-  Copy,
+  Play,
   X,
 } from 'lucide-react';
 import { ResponsiveTableWrapper } from '../common/ResponsiveTableWrapper';
@@ -32,6 +28,8 @@ interface AttendanceHistoryViewProps {
   students: Student[];
   onUpdateSession: (updatedSession: AttendanceSession) => void;
   onBack: () => void;
+  onResumeDraft?: () => void;
+  hasDraftSession?: boolean;
 }
 
 export type SessionFilterType = 'all' | 'qr' | 'swipe';
@@ -59,11 +57,18 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
   students,
   onUpdateSession,
   onBack,
+  onResumeDraft,
+  hasDraftSession,
 }) => {
   const [selectedSession, setSelectedSession] = useState<AttendanceSession | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<SessionFilterType>('all');
   const [notification, setNotification] = useState<string | null>(null);
+
+  const showNotification = useCallback((msg: string) => {
+    setNotification(msg);
+    setTimeout(() => setNotification(null), 3000);
+  }, []);
 
 
   // Counts for filter tabs
@@ -343,20 +348,62 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
           </div>
         </div>
 
-        {/* Global Bulk Export */}
-        {!selectedSession && filteredSessions.length > 0 && (
+        {/* Global Bulk Export and Resume Draft Actions in Header */}
+        {!selectedSession && (
           <div className="flex items-center gap-2 w-fit self-end sm:self-auto flex-wrap">
-            <button
-              onClick={handleBulkExportCSV}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-violet-600/20 text-violet-300 border border-violet-500/30 text-xs font-semibold hover:bg-violet-600/30 transition-all cursor-pointer shadow-sm"
-              title="Export all filtered sessions into a combined CSV"
-            >
-              <Download className="w-3.5 h-3.5 text-violet-400" />
-              <span>Export CSV</span>
-            </button>
+            {hasDraftSession && onResumeDraft && (
+              <button
+                onClick={onResumeDraft}
+                className="h-8 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 text-slate-950 text-xs font-black border border-amber-300/90 shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                title="Resume unfinished attendance session"
+              >
+                <Play className="w-3 h-3 fill-slate-950" />
+                <span>Resume Draft</span>
+              </button>
+            )}
+            {filteredSessions.length > 0 && (
+              <button
+                onClick={handleBulkExportCSV}
+                className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#121826] hover:bg-slate-800 text-white border border-slate-700/80 text-xs font-semibold transition-all cursor-pointer shadow-sm active:scale-95 min-h-[32px]"
+                title="Export all filtered sessions into a combined CSV"
+              >
+                <Download className="w-3.5 h-3.5 text-violet-400" />
+                <span>Export CSV</span>
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {/* In-Progress Draft Banner Card (Ultra HD, shown in history section only) */}
+      {hasDraftSession && onResumeDraft && !selectedSession && (
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-[#141B2D] via-[#101626] to-[#141B2D] border border-amber-500/40 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+              <Play className="w-4 h-4 fill-amber-400 ml-0.5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-sm font-bold text-white tracking-tight">Active Attendance Draft</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  In-Progress
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5 truncate">
+                An unfinished lecture session was saved on this device. Click to resume swiping without losing marked attendance.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onResumeDraft}
+            className="h-8 px-3.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-slate-950 text-xs font-black shadow-md shadow-amber-500/20 border border-amber-300/80 transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap"
+            title="Resume draft session"
+          >
+            <Play className="w-3 h-3 fill-slate-950" />
+            <span>Resume Draft Session</span>
+          </button>
+        </div>
+      )}
 
       {/* Main content: Either Detail View or Session List */}
       {selectedSession ? (
@@ -648,21 +695,21 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
           {/* Controls Bar: Filter Toggle & Search */}
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             {/* Filter Toggle to Separate QR Sessions from Traditional Swipe Sessions */}
-            <div className="flex items-center bg-[#101526] p-1 rounded-2xl border border-white/10 self-start w-full sm:w-auto">
+            <div className="flex items-center bg-[#0C1226] p-1.5 rounded-2xl border border-slate-700/80 shadow-md self-start w-full sm:w-auto gap-1">
               {/* All Sessions Tab */}
               <button
                 onClick={() => setFilterType('all')}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   filterType === 'all'
-                    ? 'bg-violet-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md border border-violet-400/50'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
                 <span>All Sessions</span>
                 <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                    filterType === 'all' ? 'bg-violet-800 text-violet-100' : 'bg-white/10 text-slate-300'
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                    filterType === 'all' ? 'bg-violet-900/90 text-white border border-violet-400/40' : 'bg-slate-800 text-slate-300'
                   }`}
                 >
                   {sessions.length}
@@ -672,17 +719,17 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
               {/* Digital (QR) Tab */}
               <button
                 onClick={() => setFilterType('qr')}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   filterType === 'qr'
-                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md shadow-cyan-900/30'
-                    : 'text-slate-400 hover:text-cyan-300'
+                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md border border-cyan-400/50'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
                 }`}
               >
                 <QrCode className="w-3.5 h-3.5" />
                 <span>Digital (QR)</span>
                 <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                    filterType === 'qr' ? 'bg-cyan-800 text-cyan-100' : 'bg-cyan-500/10 text-cyan-300'
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                    filterType === 'qr' ? 'bg-cyan-900/90 text-white border border-cyan-400/40' : 'bg-slate-800 text-cyan-300'
                   }`}
                 >
                   {qrSessionsCount}
@@ -692,17 +739,17 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
               {/* Traditional Swipe Tab */}
               <button
                 onClick={() => setFilterType('swipe')}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   filterType === 'swipe'
-                    ? 'bg-slate-700 text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'bg-slate-700 text-white shadow-md border border-slate-500'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
                 }`}
               >
                 <Smartphone className="w-3.5 h-3.5" />
                 <span>Traditional Swipe</span>
                 <span
-                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                    filterType === 'swipe' ? 'bg-slate-800 text-slate-100' : 'bg-white/10 text-slate-300'
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                    filterType === 'swipe' ? 'bg-slate-900 text-white' : 'bg-slate-800 text-slate-300'
                   }`}
                 >
                   {swipeSessionsCount}
@@ -712,18 +759,18 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
 
             {/* Search Input */}
             <div className="relative flex-1 md:max-w-xs">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+              <Search className="w-4 h-4 text-cyan-400 absolute left-3 top-3" />
               <input
                 type="text"
                 placeholder="Search subject, classroom, date..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[#101526] border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-violet-500 transition-colors"
+                className="w-full bg-[#0C1226] border border-slate-700 focus:border-cyan-400 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-cyan-500/40 transition-colors shadow-sm font-medium"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-2.5 text-xs text-slate-400 hover:text-white"
+                  className="absolute right-3 top-2.5 text-xs text-cyan-400 hover:text-white font-semibold cursor-pointer"
                 >
                   Clear
                 </button>
@@ -776,6 +823,21 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
                               <span>Traditional Swipe</span>
                             </span>
                           )}
+
+                          {/* Sync Status Badge */}
+                          {sess.syncStatus === 'synced' ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono">
+                              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" />
+                              <span>Synced</span>
+                            </span>
+                          ) : (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono"
+                              title="Saved locally in device database. Waiting to synchronize with cloud."
+                            >
+                              <span>Saved Locally</span>
+                            </span>
+                          )}
                         </div>
 
                         <p className="text-xs text-slate-400 truncate flex items-center gap-2">
@@ -812,13 +874,13 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleExportGoogleSheet(sess);
+                          handleExportHistoricalCSV(sess);
                         }}
-                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 hover:text-white transition-all text-xs font-semibold cursor-pointer shrink-0 shadow-sm"
-                        title="Export this session directly to Google Sheets"
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 hover:text-white transition-all text-xs font-semibold cursor-pointer shrink-0 shadow-sm"
+                        title="Download CSV report for this session"
                       >
-                        <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="hidden md:inline">Google Sheet</span>
+                        <Download className="w-3.5 h-3.5 text-cyan-400" />
+                        <span className="hidden md:inline">Export CSV</span>
                       </button>
                     </div>
                   </div>
@@ -857,44 +919,6 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Google Workspace Confirmation Dialog (Mandatory per Guidelines) */}
-      {workspaceConfirm && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[#10162A] border border-white/15 rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0">
-                <AlertTriangle className="w-5 h-5 text-cyan-400" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">{workspaceConfirm.title}</h3>
-                <p className="text-xs text-slate-400 mt-1 whitespace-pre-line leading-relaxed">
-                  {workspaceConfirm.description}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/10">
-              <button
-                onClick={() => setWorkspaceConfirm(null)}
-                className="px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  const action = workspaceConfirm.onConfirm;
-                  setWorkspaceConfirm(null);
-                  await action();
-                }}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold transition-all shadow-md cursor-pointer"
-              >
-                Confirm & Create
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

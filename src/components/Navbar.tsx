@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Role, AttendanceSession, Classroom, Student, Subject } from '../types/attendance';
 import { User } from '../services/firebase';
 import { SwipeAttendLogo } from './common/SwipeAttendLogo';
-import { subscribeOfflineSync, OfflineSyncStatus } from '../services/offlineSyncService';
+import { subscribeOfflineSync, OfflineSyncStatus, getCurrentSyncStatus } from '../services/offlineSyncService';
 import { formatClassDate } from '../utils/dateUtils';
 import { DownloadAppModal } from './common/DownloadAppModal';
+import { OfflineStatusBadge } from './offline/OfflineStatusBadge';
+import { OfflineSyncModal } from './offline/OfflineSyncModal';
 import {
   Sparkles,
   RotateCcw,
@@ -16,6 +18,7 @@ import {
   LogIn,
   QrCode,
   Menu,
+  Play,
   X,
   LayoutDashboard,
   Users,
@@ -78,27 +81,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
-  const [offlineStatus, setOfflineStatus] = useState<OfflineSyncStatus>({
-    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
-    pendingCount: 0,
-    lastSyncTime: null,
-    isSyncing: false,
-  });
+  const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
+  const [offlineStatus, setOfflineStatus] = useState<OfflineSyncStatus>(getCurrentSyncStatus());
   const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const unsub = subscribeOfflineSync((status) => {
-      setOfflineStatus((prev) => {
-        if (
-          prev.isOnline === status.isOnline &&
-          prev.pendingCount === status.pendingCount &&
-          prev.isSyncing === status.isSyncing &&
-          prev.lastSyncTime === status.lastSyncTime
-        ) {
-          return prev;
-        }
-        return status;
-      });
+      setOfflineStatus(status);
     });
     return () => unsub();
   }, []);
@@ -189,125 +178,84 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full max-w-full bg-[#070A18]/90 backdrop-blur-2xl border-b border-cyan-500/20 px-3 sm:px-6 lg:px-8 py-2.5 shadow-lg shadow-cyan-950/20 transition-colors">
+      <header className="sticky top-0 z-40 w-full max-w-full bg-[#0B0F19]/95 backdrop-blur-md border-b border-slate-800/90 px-3 sm:px-6 lg:px-8 py-2.5 transition-colors">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
           {/* Brand Logo & Name */}
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <button
               onClick={() => onNavigate(currentRole === 'teacher' ? 'dashboard' : currentRole === 'student' ? 'student' : 'admin')}
-              className="flex items-center gap-2 sm:gap-2.5 text-left group cursor-pointer focus:outline-none"
+              className="flex items-center gap-2.5 text-left group cursor-pointer focus:outline-none"
               aria-label="Go to SwipeAttend home"
             >
-              <SwipeAttendLogo size={36} className="group-hover:scale-105 transition-transform" />
+              <SwipeAttendLogo size={32} />
               <div className="leading-tight">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-base sm:text-xl font-bold tracking-tight text-white font-['Plus_Jakarta_Sans'] whitespace-nowrap">
-                    Swipe<span className="text-cyan-400">Attend</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-base sm:text-lg font-bold tracking-tight text-white font-['Plus_Jakarta_Sans'] whitespace-nowrap">
+                    Swipe<span className="text-violet-400">Attend</span>
                   </span>
-                  <span className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+                  <span className="text-[10px] font-semibold text-slate-400 border border-slate-800 px-2 py-0.5 rounded-full bg-slate-900">
                     BIT Sindri
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400 hidden sm:block tracking-wide font-mono">
-                  Biometric Gesture Attendance
-                </p>
               </div>
             </button>
           </div>
 
-          {/* Center: Desktop Role Switcher for instant Demo mode toggling */}
-          <div className="hidden lg:flex items-center p-1 bg-[#0B1124] border border-cyan-500/30 rounded-xl gap-1 shadow-md shadow-cyan-950/40">
+          {/* Center: Desktop Role & View Switcher */}
+          <div className="hidden md:flex items-center p-1 bg-[#121826] border border-slate-800 rounded-xl gap-1">
             <button
               onClick={() => handleRoleSelect('teacher')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                 currentRole === 'teacher'
-                  ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md shadow-violet-600/40'
+                  ? 'bg-violet-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
               <UserCheck className="w-3.5 h-3.5" />
-              <span>Teacher Portal</span>
+              <span>Teacher</span>
             </button>
             <button
               onClick={() => handleRoleSelect('student')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                 currentRole === 'student'
-                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-600/40'
+                  ? 'bg-violet-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
               <GraduationCap className="w-3.5 h-3.5" />
-              <span>Student Pass</span>
+              <span>Student</span>
             </button>
             <button
               onClick={() => handleRoleSelect('admin')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                 currentRole === 'admin'
-                  ? 'bg-gradient-to-r from-amber-600 to-rose-600 text-white shadow-md shadow-amber-600/40'
+                  ? 'bg-violet-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
               <ShieldAlert className="w-3.5 h-3.5" />
-              <span>Admin Console</span>
+              <span>Admin</span>
             </button>
           </div>
 
-          {/* Medium screen subtle mode badge */}
-          <div className="hidden md:flex lg:hidden items-center gap-2 text-xs text-slate-300 bg-white/5 border border-cyan-500/20 px-3 py-1 rounded-full font-mono">
-            <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]"></span>
-            <span className="text-slate-400">Mode:</span>
-            <span className="font-semibold text-white">{getRoleLabel()}</span>
-            {hasDraftSession && (
-              <span className="text-[10px] font-medium text-amber-300 bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/30 ml-1">
-                Draft in progress
-              </span>
-            )}
-          </div>
-
-          {/* Right Corner: Controls, Offline Sync, PWA Install & Menu */}
-          <div className="flex items-center gap-2">
-            {/* Offline Connectivity Pill */}
-            {!offlineStatus.isOnline && (
-              <div
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-semibold animate-pulse"
-                title="Offline Mode: Attendance sessions recorded offline will automatically sync when connection restores."
-              >
-                <WifiOff className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Offline Mode</span>
-                {offlineStatus.pendingCount > 0 && (
-                  <span className="bg-amber-500/20 px-1.5 rounded-full text-[10px] font-mono">
-                    {offlineStatus.pendingCount} queued
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Offline Syncing in Progress Indicator */}
-            {offlineStatus.isSyncing && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[11px] font-semibold">
-                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                <span className="hidden sm:inline">Syncing...</span>
-              </div>
-            )}
-
-            {/* Quick Draft Resume Indicator Button (only if draft exists) */}
-            {hasDraftSession && activeView !== 'attendance-swipe' && (
+          {/* Right Corner: Controls, Quick Draft & Menu */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Quick Draft Resume Indicator Button (shown in History section only, removed from front screen) */}
+            {hasDraftSession && activeView === 'history' && (
               <button
                 onClick={onResumeDraft}
-                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:bg-amber-500/25 transition-colors cursor-pointer"
+                className="h-7 px-2 rounded-lg bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-slate-950 text-[11px] font-extrabold tracking-tight border border-amber-300/80 shadow-[0_1px_6px_rgba(245,158,11,0.25)] transition-all cursor-pointer flex flex-row items-center justify-center gap-1 shrink-0 whitespace-nowrap"
                 title="Resume in-progress attendance session"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Resume</span>
+                <Play className="w-2.5 h-2.5 fill-slate-950 shrink-0" />
+                <span>Resume Draft</span>
               </button>
             )}
-
-
 
             {/* User Profile Avatar if logged in */}
             {firebaseUser && (
               <div
-                className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-emerald-500/40 bg-emerald-900/40 flex items-center justify-center text-xs font-bold text-emerald-200 shrink-0 cursor-pointer"
+                className="w-8 h-8 rounded-full overflow-hidden ring-1 ring-slate-700 bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-300 shrink-0 cursor-pointer"
                 onClick={() => setIsMenuOpen(true)}
                 title={`Signed in as ${firebaseUser.displayName || firebaseUser.email}`}
               >
@@ -324,25 +272,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             )}
 
-
-
-
-            {/* Corner 3-Line Menu Trigger Button */}
+            {/* Menu Trigger Button */}
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="relative p-2 sm:px-2.5 sm:py-2 rounded-xl bg-white/5 hover:bg-white/10 active:bg-white/15 border border-white/10 hover:border-violet-500/40 text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-1.5 group focus:outline-none focus:ring-2 focus:ring-violet-500/40"
+              className="relative h-8 px-2.5 rounded-lg bg-[#121826] hover:bg-slate-800 active:scale-95 border border-slate-800 hover:border-slate-700 text-slate-200 hover:text-white transition-all cursor-pointer flex flex-row items-center justify-center gap-1.5 shrink-0 whitespace-nowrap text-xs font-semibold"
               title="Open Navigation Menu"
               aria-label="Open navigation menu"
               aria-expanded={isMenuOpen}
             >
-              <Menu className="w-5 h-5 text-slate-200 group-hover:text-violet-300 transition-colors" />
-              <span className="hidden sm:inline text-xs font-medium text-slate-300 group-hover:text-white">
-                Menu
-              </span>
+              <Menu className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+              <span>Menu</span>
 
-              {/* Alert Badge for draft session or sync */}
+              {/* Alert Badge for draft session */}
               {hasDraftSession && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-[#080C16] animate-pulse" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-400" />
               )}
             </button>
           </div>
@@ -722,7 +665,47 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
                 </div>
 
-                {/* SECTION 4: FIREBASE AUTH & ACCOUNT */}
+                {/* SECTION 4: OFFLINE STORAGE & SYNC MANAGER */}
+                <div className="space-y-2 pt-4">
+                  <div className="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    <span>Offline Storage & Sync</span>
+                    <span className="text-[10px] text-cyan-400 font-normal">IndexedDB Engine</span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setIsOfflineModalOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-cyan-500/40 hover:bg-white/10 text-slate-200 transition-all cursor-pointer text-left group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0">
+                        {offlineStatus.isOnline ? <Wifi className="w-4 h-4" /> : <WifiOff className="w-4 h-4 text-amber-400" />}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-xs text-white flex items-center gap-1.5">
+                          <span>Offline Storage & Queue</span>
+                          <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full border ${
+                            !offlineStatus.isOnline 
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' 
+                              : offlineStatus.pendingCount > 0 
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' 
+                                : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                          }`}>
+                            {!offlineStatus.isOnline ? 'Offline' : offlineStatus.pendingCount > 0 ? `${offlineStatus.pendingCount} Pending` : 'Synced'}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          Inspect queue, backup data & local device storage
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-white shrink-0" />
+                  </button>
+                </div>
+
+                {/* SECTION 5: FIREBASE AUTH & ACCOUNT */}
                 <div className="space-y-2 pt-4">
                   <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                     Cloud Account & Persistence
@@ -822,6 +805,14 @@ export const Navbar: React.FC<NavbarProps> = ({
         classrooms={classrooms}
       />
 
+      {/* Offline Storage & Cloud Sync Manager Modal */}
+      <OfflineSyncModal
+        isOpen={isOfflineModalOpen}
+        onClose={() => setIsOfflineModalOpen(false)}
+        onDataRestored={() => {
+          window.location.reload();
+        }}
+      />
     </>
   );
 };

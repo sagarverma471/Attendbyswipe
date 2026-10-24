@@ -52,20 +52,18 @@ export const LowAttendanceWarning: React.FC<LowAttendanceWarningProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsConfiguring(!isConfiguring)}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#121826] hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs font-semibold text-white transition-all cursor-pointer shadow-sm active:scale-95"
             title="Configure warning threshold percentage"
           >
-            <SlidersHorizontal className="w-3 h-3 text-amber-400" />
+            <SlidersHorizontal className="w-3.5 h-3.5 text-amber-400" />
             <span className="font-mono text-amber-400 font-bold">{threshold}%</span>
-            <span>Threshold</span>
+            <span className="text-slate-300">Threshold</span>
           </button>
         </div>
       </div>
 
       {/* Main Alert Container */}
-      <div className="bg-gradient-to-br from-[#151928] to-[#101422] border border-amber-500/30 rounded-xl sm:rounded-2xl p-4 shadow-lg space-y-3 relative overflow-hidden">
-        {/* Subtle accent line */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-rose-500 to-amber-500" />
+      <div className="bg-[#121826] border border-slate-800 rounded-2xl p-4 shadow-sm space-y-3 relative overflow-hidden">
 
         {/* Threshold configuration slider drawer */}
         {isConfiguring && (
@@ -146,20 +144,20 @@ export const LowAttendanceWarning: React.FC<LowAttendanceWarningProps> = ({
         )}
 
         {/* Footer actions */}
-        <div className="pt-1 flex flex-col sm:flex-row gap-2">
+        <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
           {atRiskStudents.length > 4 && (
             <button
               onClick={() => setShowAllAtRisk(!showAllAtRisk)}
-              className="flex-1 py-2 px-3 text-center rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              className="flex-1 py-2 px-3 text-center rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 text-xs font-semibold text-slate-200 hover:text-white transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
             >
               {showAllAtRisk ? (
                 <>
-                  <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                  <ChevronUp className="w-4 h-4 text-slate-400" />
                   <span>Show Fewer</span>
                 </>
               ) : (
                 <>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
                   <span>Show All {atRiskStudents.length} Shortages</span>
                 </>
               )}
@@ -168,10 +166,10 @@ export const LowAttendanceWarning: React.FC<LowAttendanceWarningProps> = ({
 
           <button
             onClick={onNavigateStudents}
-            className="flex-1 py-2 px-3 text-center rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-bold text-amber-300 hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+            className="flex-1 py-2 px-3 text-center rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95"
           >
             <span>Manage All Students</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>

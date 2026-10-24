@@ -39,11 +39,11 @@ export const StudentSubjectsSection: React.FC<StudentSubjectsSectionProps> = ({
             subjectBreakdown.map((sub) => (
               <div
                 key={sub.code}
-                className="futuristic-glass cyber-corner border border-cyan-500/20 hover:border-cyan-400/50 rounded-xl sm:rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between transition-colors shadow-sm"
+                className="bg-[#121826] border border-slate-800 hover:border-slate-700 rounded-2xl p-4 flex flex-col justify-between transition-colors shadow-sm"
               >
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[11px] font-mono text-cyan-300 font-semibold">
+                    <span className="text-[11px] font-mono text-violet-400 font-semibold">
                       {sub.code}
                     </span>
                     <span
@@ -51,7 +51,7 @@ export const StudentSubjectsSection: React.FC<StudentSubjectsSectionProps> = ({
                         sub.percent >= 75
                           ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                           : sub.held === 0
-                          ? 'bg-slate-700/30 text-slate-400 border border-slate-700/40'
+                          ? 'bg-slate-800 text-slate-400 border border-slate-700'
                           : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
                       }`}
                     >
@@ -63,7 +63,7 @@ export const StudentSubjectsSection: React.FC<StudentSubjectsSectionProps> = ({
                   </h3>
                 </div>
 
-                <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                <div className="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400 font-mono">
                   <span>{sub.held > 0 ? `${sub.attended}/${sub.held} Attended` : '0/0 Conducted'}</span>
                   <span className={sub.percent >= 75 ? 'text-emerald-400' : sub.held === 0 ? 'text-slate-400' : 'text-amber-400'}>
                     {sub.held === 0 ? 'Upcoming' : sub.percent >= 75 ? 'Safe' : 'Shortage'}
@@ -72,7 +72,7 @@ export const StudentSubjectsSection: React.FC<StudentSubjectsSectionProps> = ({
               </div>
             ))
           ) : (
-            <div className="col-span-full p-6 text-center text-slate-400 rounded-xl bg-[#090D1E]/60 border border-white/5">
+            <div className="col-span-full p-6 text-center text-slate-400 rounded-2xl bg-[#121826] border border-slate-800">
               <p className="text-xs">No specific curriculum subjects assigned yet.</p>
             </div>
           )}
@@ -80,22 +80,22 @@ export const StudentSubjectsSection: React.FC<StudentSubjectsSectionProps> = ({
       </div>
 
       {/* Recent History Table */}
-      <div className="futuristic-glass cyber-corner border border-cyan-500/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-md">
-        <h3 className="text-sm sm:text-base font-bold text-white mb-3 font-['Plus_Jakarta_Sans'] flex items-center justify-between">
+      <div className="bg-[#121826] border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm">
+        <h3 className="text-sm sm:text-base font-bold text-white mb-3 flex items-center justify-between">
           <span>Recent Attendance Activity Feed</span>
           <span className="text-xs text-slate-400 font-mono font-normal">
             {recentHistory.length} Recorded {recentHistory.length === 1 ? 'Lecture' : 'Lectures'}
           </span>
         </h3>
-        <div className="divide-y divide-white/5">
+        <div className="divide-y divide-slate-800/80">
           {recentHistory.length > 0 ? (
             recentHistory.map((item, idx) => (
               <div
                 key={idx}
-                className="py-2.5 flex items-center justify-between text-xs hover:bg-white/5 px-2 rounded-xl transition-colors"
+                className="py-2.5 flex items-center justify-between text-xs hover:bg-slate-800/40 px-2 rounded-xl transition-colors"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <span className="font-mono text-cyan-300 text-[11px] shrink-0 font-medium">{item.date}</span>
+                  <span className="font-mono text-violet-400 text-[11px] shrink-0 font-medium">{item.date}</span>
                   <span className="font-semibold text-white truncate text-[11px] sm:text-xs">{item.subject}</span>
                 </div>
 
@@ -103,7 +103,7 @@ export const StudentSubjectsSection: React.FC<StudentSubjectsSectionProps> = ({
                   className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] shrink-0 font-mono ${
                     item.status === 'present'
                       ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                      : 'bg-red-500/15 text-red-400 border border-red-500/30'
+                      : 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
                   }`}
                 >
                   {item.status === 'present' ? 'PRESENT' : 'ABSENT'}
