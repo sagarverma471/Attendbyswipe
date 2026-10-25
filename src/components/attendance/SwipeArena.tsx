@@ -141,14 +141,14 @@ const ActiveSwipeCard: React.FC<ActiveSwipeCardProps> = ({
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.85}
       onDragEnd={handleDragEnd}
-      initial={{ scale: 0.94, opacity: 0, y: 12 }}
+      initial={{ scale: 0.96, opacity: 0, y: 10 }}
       animate={{ scale: 1, opacity: 1, y: 0, x: 0, rotate: 0 }}
       exit={{
-        x: exitDirection === 'right' ? (typeof window !== 'undefined' ? Math.max(window.innerWidth, 800) : 800) : -(typeof window !== 'undefined' ? Math.max(window.innerWidth, 800) : 800),
-        rotate: exitDirection === 'right' ? 18 : -18,
+        x: exitDirection === 'left' ? -1200 : 1200,
+        rotate: exitDirection === 'left' ? -22 : 22,
         opacity: 0,
-        scale: 0.88,
-        transition: { duration: 0.12, ease: 'easeOut' },
+        scale: 1,
+        transition: { duration: 0.22, ease: [0.32, 0.72, 0, 1] },
       }}
       transition={{ type: 'spring', damping: 28, stiffness: 420 }}
       className="absolute inset-0 z-20 w-full h-[470px] sm:h-[495px] md:h-[515px] rounded-3xl bg-[#121826] border border-slate-800 p-5 sm:p-6 flex flex-col justify-between shadow-xl cursor-grab active:cursor-grabbing touch-none select-none overflow-hidden will-change-transform transform-gpu"
@@ -239,7 +239,7 @@ const ActiveSwipeCard: React.FC<ActiveSwipeCardProps> = ({
             </span>
           </div>
           <span className="text-[11px] font-semibold text-slate-400 shrink-0">
-            {student.section ? `Sec ${student.section.replace(/^Section\s*/i, '')}` : 'Sec A'}
+            {student.semester || '1st Sem'} • {student.section ? `Sec ${student.section.replace(/^Section\s*/i, '')}` : 'Sec A'}
           </span>
         </div>
 
@@ -479,7 +479,7 @@ export const SwipeArena: React.FC<SwipeArenaProps> = ({
         synced: false,
       });
 
-      // Lightning-fast card exit animation (120ms) before advancing student
+      // Smooth card exit animation (220ms) before advancing student
       setTimeout(() => {
         setExitDirection(null);
         notifySessionProgress(newRecords, nextIdx, newUndoStack);
@@ -500,7 +500,7 @@ export const SwipeArena: React.FC<SwipeArenaProps> = ({
           sessionRef.current = finalizedSession;
           onComplete(finalizedSession);
         }
-      }, 120);
+      }, 220);
     },
     [students, totalStudents, notifySessionProgress, onComplete, triggerHaptic]
   );
@@ -752,7 +752,7 @@ export const SwipeArena: React.FC<SwipeArenaProps> = ({
         {viewMode === 'swipe' ? (
           <div className="relative flex-1 flex flex-col items-center justify-center my-3 sm:my-5 min-h-[480px] touch-none">
             {/* DECK CARDS CONTAINER */}
-            <div className="relative w-full max-w-[340px] xs:max-w-[360px] sm:max-w-md h-[460px] sm:h-[485px] md:h-[500px] flex items-center justify-center">
+            <div className="relative w-full max-w-[calc(100vw-24px)] xs:max-w-[340px] sm:max-w-md h-[460px] sm:h-[485px] md:h-[500px] flex items-center justify-center">
               {/* Peek Card: Upcoming Student in Deck */}
               {nextStudent && <PeekDeckCard student={nextStudent} index={currentIndex + 1} />}
 

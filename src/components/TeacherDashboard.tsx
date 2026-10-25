@@ -64,7 +64,7 @@ const TeacherDashboardComponent: React.FC<TeacherDashboardProps> = ({
   ).length;
 
   return (
-    <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-5 sm:space-y-7 overflow-x-hidden w-full min-w-0">
+    <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-5 sm:space-y-7 overflow-x-hidden w-full min-w-0 max-w-full">
       {/* Offline Mode Active Notification Banner */}
       {!isOnline && (
         <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between gap-3 text-xs text-amber-200 animate-fade-in shadow-sm">
@@ -175,8 +175,8 @@ const TeacherDashboardComponent: React.FC<TeacherDashboardProps> = ({
 
       {/* Today's Scheduled Lecture Sessions */}
       <div className="space-y-3 sm:space-y-4">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-base sm:text-lg font-bold text-white font-['Plus_Jakarta_Sans']">
               Today's Scheduled Classes
             </h2>
@@ -191,8 +191,8 @@ const TeacherDashboardComponent: React.FC<TeacherDashboardProps> = ({
             title="Mathematics"
             code="MA101"
             period="Period 2"
-            classroomLabel="B.Tech CSE · 1st Year · Sec A"
-            studentCount={72}
+            classroomLabel="B.Tech Cyber Security · 1st Sem"
+            studentCount={70}
             timeRange="10:00 - 11:00 AM"
             themeColor="rose"
             classroomId="class-cse-3a"

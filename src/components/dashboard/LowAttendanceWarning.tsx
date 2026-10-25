@@ -38,7 +38,7 @@ export const LowAttendanceWarning: React.FC<LowAttendanceWarningProps> = ({
   return (
     <div className="space-y-3">
       {/* Alert Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <div className="w-5 h-5 rounded-md bg-amber-500/20 flex items-center justify-center text-amber-400">
             <AlertTriangle className="w-3.5 h-3.5" />

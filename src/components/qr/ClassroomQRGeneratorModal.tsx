@@ -447,6 +447,14 @@ export const ClassroomQRGeneratorModal: React.FC<ClassroomQRGeneratorModalProps>
 
   const remainingCount = Math.max(0, enrolledList.length - scannedList.length);
 
+  const remainingStudents = enrolledList.filter(
+    (std) =>
+      !scannedMap[std.id] &&
+      !Object.values(scannedMap).some(
+        (rec: any) => rec.normalizedRollNo === normalizeRollNumber(std.rollNo)
+      )
+  );
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-fade-in overflow-y-auto font-['Plus_Jakarta_Sans']">
       <div
@@ -909,6 +917,15 @@ export const ClassroomQRGeneratorModal: React.FC<ClassroomQRGeneratorModalProps>
                   </span>
                 </div>
 
+                {/* Prominent Real-time Counter Banner */}
+                <div className="flex items-center justify-around py-1.5 px-2 bg-gradient-to-r from-violet-950/40 via-[#141A2E] to-emerald-950/40 rounded-xl border border-white/10 mb-2 font-mono text-xs">
+                  <span className="text-slate-300 font-bold">Total: <strong className="text-white">{enrolledStudents.length}</strong></span>
+                  <span className="text-slate-500">|</span>
+                  <span className="text-emerald-300 font-bold">Submitted: <strong className="text-emerald-400">{scannedList.length}</strong></span>
+                  <span className="text-slate-500">|</span>
+                  <span className="text-amber-300 font-bold">Remaining: <strong className="text-amber-400">{remainingCount}</strong></span>
+                </div>
+
                 {/* Submissions Stream */}
                 {rightColumnTab === 'feed' ? (
                   <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
@@ -927,7 +944,7 @@ export const ClassroomQRGeneratorModal: React.FC<ClassroomQRGeneratorModalProps>
                         .map((item) => (
                           <div
                             key={item.studentId || item.id}
-                            className="flex items-center justify-between p-2 rounded-xl bg-white/3 border border-white/5 hover:border-emerald-500/30 transition-colors animate-fade-in"
+                            className="flex items-center justify-between p-2 rounded-xl bg-white/3 border border-white/5 hover:border-emerald-500/30 transition-colors animate-fade-in gap-2"
                           >
                             <div className="flex items-center gap-2 min-w-0">
                               <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
@@ -937,15 +954,24 @@ export const ClassroomQRGeneratorModal: React.FC<ClassroomQRGeneratorModalProps>
                                 <p className="text-xs font-semibold text-slate-200 truncate">
                                   {item.fullName || (item as any).studentName}
                                 </p>
-                                <p className="text-[10px] text-slate-400 font-mono">
+                                <p className="text-[10px] text-slate-400 font-mono truncate">
                                   Roll #{item.rollNo} • {item.department} {item.section ? `• Sec: ${item.section}` : ''}
                                 </p>
                               </div>
                             </div>
 
-                            <span className="text-[10px] text-slate-400 font-mono shrink-0 ml-2">
-                              {item.submittedAt || (item as any).scannedAt}
-                            </span>
+                            <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                {item.submittedAt || (item as any).scannedAt}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                item.status === 'present'
+                                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                  : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                              }`}>
+                                {item.status === 'present' ? 'Present' : 'Absent'}
+                              </span>
+                            </div>
                           </div>
                         ))
                     )}
@@ -1334,6 +1360,68 @@ export const ClassroomQRGeneratorModal: React.FC<ClassroomQRGeneratorModalProps>
                           </tr>
                         );
                       })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Remaining (Unscanned) Students Review Table */}
+            <div className="rounded-2xl border border-white/8 overflow-hidden bg-[#101526]">
+              <div className="p-3 bg-[#141A2E] border-b border-white/8 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                    Remaining Students ({remainingStudents.length})
+                  </h3>
+                  <span className="text-[10px] text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full font-semibold">
+                    Marked Absent by Default
+                  </span>
+                </div>
+              </div>
+
+              {remainingStudents.length === 0 ? (
+                <div className="p-6 text-center text-emerald-400 text-xs">
+                  <p className="font-semibold">All {enrolledList.length} students have submitted attendance!</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto max-h-[260px]">
+                  <table className="w-full text-left text-xs text-slate-300 min-w-[500px]">
+                    <thead className="bg-[#141A2E]/60 text-slate-400 font-semibold border-b border-white/8 sticky top-0">
+                      <tr>
+                        <th className="py-2.5 px-3 font-mono">Roll No.</th>
+                        <th className="py-2.5 px-3">Student Name</th>
+                        <th className="py-2.5 px-3">Department</th>
+                        <th className="py-2.5 px-3 text-center">Status</th>
+                        <th className="py-2.5 px-3 text-right">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {remainingStudents.map((std) => (
+                        <tr key={std.id} className="hover:bg-white/5 transition-colors">
+                          <td className="py-2 px-3 font-mono font-bold text-slate-300">
+                            {std.rollNo}
+                          </td>
+                          <td className="py-2 px-3 font-semibold text-slate-200">
+                            {std.name}
+                          </td>
+                          <td className="py-2 px-3 text-slate-400">
+                            {classroom.department}
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <span className="px-2 py-0.5 rounded-full font-bold text-[10px] bg-red-500/20 text-red-400 border border-red-500/30">
+                              Absent
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-right">
+                            <button
+                              onClick={() => handleOneTapCheckIn(std)}
+                              className="text-xs text-emerald-400 hover:text-emerald-300 underline font-semibold cursor-pointer"
+                            >
+                              Mark Present
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>

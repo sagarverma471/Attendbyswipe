@@ -11,8 +11,13 @@ interface StudentAvatarProps {
   priority?: boolean;
 }
 
-// Generate consistent portrait index from roll number, studentId, or name
 export function getLocalPortraitUrl(rollNo?: string, name?: string, studentId?: string): string {
+  if (rollNo && rollNo.startsWith('26100')) {
+    return `/cyber-students/${rollNo}.jpg`;
+  }
+  if (studentId && studentId.startsWith('26100')) {
+    return `/cyber-students/${studentId}.jpg`;
+  }
   if (studentId && (studentId.includes('bee') || studentId.includes('ST2'))) {
     const num = parseInt((rollNo || studentId).replace(/\D/g, ''), 10) || 1;
     const safeNum = Math.min(Math.max(num, 1), 72);

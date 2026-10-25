@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Classroom, Student, QRAttendanceSession } from '../../types/attendance';
 import { SwipeAttendLogo } from '../common/SwipeAttendLogo';
+import { StudentAvatar } from '../common/StudentAvatar';
 import { CameraQRScanner, DecodedQRData } from './CameraQRScanner';
 import {
   getActiveQRSession,
@@ -29,6 +30,7 @@ import {
   getOrCreateDeviceId,
   normalizeRollNumber,
 } from '../../services/qrAttendanceService';
+import defaultCyberStudents from '../../data/cyberSecurityStudents.json';
 
 interface StudentAttendancePageProps {
   initialSessionId?: string;
@@ -76,6 +78,10 @@ export const StudentAttendancePage: React.FC<StudentAttendancePageProps> = ({
   }, [initialSessionId, initialClassroomId, initialToken]);
 
   const [session, setSession] = useState<QRAttendanceSession | null>(null);
+  const [sessionRoster, setSessionRoster] = useState<Student[]>(() => {
+    if (allStudents && allStudents.length > 0) return allStudents;
+    return defaultCyberStudents as Student[];
+  });
 
   // Form State: Initialize directly from query parameters so student never waits
   const [fullName, setFullName] = useState('');
@@ -156,6 +162,11 @@ export const StudentAttendancePage: React.FC<StudentAttendancePageProps> = ({
             setTokenInput(found.currentToken);
           }
 
+          // If session contains roster, update sessionRoster
+          if ((found as any).roster && Array.isArray((found as any).roster) && (found as any).roster.length > 0) {
+            setSessionRoster((found as any).roster);
+          }
+
           // Check if this device or student already submitted in this session
           const existingSubs = Object.values(found.submissions || {});
           const deviceMatch = existingSubs.find((s) => s.deviceId === deviceId);
@@ -183,6 +194,18 @@ export const StudentAttendancePage: React.FC<StudentAttendancePageProps> = ({
 
     loadSession();
 
+    // Secondary fetch for roster
+    if (queryParams.sessionId) {
+      fetch(`/api/qr-session/${queryParams.sessionId}/roster`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (isMounted && data?.roster && Array.isArray(data.roster) && data.roster.length > 0) {
+            setSessionRoster(data.roster);
+          }
+        })
+        .catch(() => {});
+    }
+
     return () => {
       isMounted = false;
     };
@@ -192,20 +215,28 @@ export const StudentAttendancePage: React.FC<StudentAttendancePageProps> = ({
   const rosterMatch = useMemo(() => {
     if (!rollNo.trim()) return null;
     const norm = normalizeRollNumber(rollNo);
-    return allStudents.find(
-      (s) =>
+    return sessionRoster.find(
+      (s: any) =>
         normalizeRollNumber(s.rollNo) === norm ||
-        s.rollNo.toUpperCase() === norm ||
-        s.studentId.toUpperCase() === norm
+        s.rollNo?.toUpperCase() === norm ||
+        s.studentId?.toUpperCase() === norm
     );
-  }, [rollNo, allStudents]);
+  }, [rollNo, sessionRoster]);
 
-  // Auto-fill full name if matching roster student is detected and student hasn't typed a full name yet
+  // Auto-fill details if matching roster student is detected
   useEffect(() => {
-    if (rosterMatch?.name && !fullName.trim()) {
-      setFullName(rosterMatch.name);
+    if (rosterMatch) {
+      if (rosterMatch.name) {
+        setFullName(rosterMatch.name);
+      }
+      if (rosterMatch.department) {
+        setDepartment(rosterMatch.department);
+      }
+      if (rosterMatch.section) {
+        setSection(rosterMatch.section);
+      }
     }
-  }, [rosterMatch?.name]);
+  }, [rosterMatch]);
 
   // Check if roll number is already marked in this session
   const isDuplicateRoll = useMemo(() => {
@@ -253,9 +284,7 @@ export const StudentAttendancePage: React.FC<StudentAttendancePageProps> = ({
         section: section.trim() || queryParams.sec || session?.section || undefined,
         tokenProvided: tokenInput.trim() || queryParams.token || 'VERIFIED-QR',
         deviceId,
-        rosterStudents: allStudents.filter(
-          (s) => s.classroomId === (session?.classroomId || queryParams.classroomId)
-        ),
+        rosterStudents: sessionRoster,
       });
 
       if (res.success && res.record) {
@@ -346,7 +375,20 @@ export const StudentAttendancePage: React.FC<StudentAttendancePageProps> = ({
             </div>
 
             {/* Receipt Card */}
-            <div className="p-4 rounded-2xl bg-[#141A2E] border border-white/8 text-left space-y-2 text-xs">
+            <div className="p-4 rounded-2xl bg-[#141A2E] border border-white/8 text-left space-y-3 text-xs">
+              <div className="flex items-center gap-3 pb-3 border-b border-white/10">
+                <StudentAvatar
+                  name={submittedRecord.fullName}
+                  rollNo={submittedRecord.rollNo}
+                  size="md"
+                  className="rounded-xl ring-2 ring-emerald-500/30 shrink-0"
+                />
+                <div className="min-w-0">
+                  <p className="font-bold text-white text-sm truncate">{submittedRecord.fullName}</p>
+                  <p className="font-mono text-xs font-semibold text-violet-300">Roll #{submittedRecord.rollNo}</p>
+                </div>
+              </div>
+
               <div className="flex justify-between py-1 border-b border-white/5">
                 <span className="text-slate-400">Student Name:</span>
                 <span className="font-bold text-white">{submittedRecord.fullName}</span>
@@ -528,13 +570,37 @@ export const StudentAttendancePage: React.FC<StudentAttendancePageProps> = ({
                   className="w-full bg-[#141A2E] border border-white/10 rounded-xl px-3.5 py-3 text-sm font-mono font-bold tracking-wide text-white placeholder-slate-500 focus:outline-none focus:border-violet-500 uppercase transition-colors"
                 />
                 {rosterMatch ? (
-                  <p className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" />
-                    Official match: {rosterMatch.name} (Student ID: {rosterMatch.studentId})
-                  </p>
+                  <div className="mt-2.5 p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-2 animate-fade-in text-left">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-emerald-300 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        Official Student Record Match
+                      </span>
+                      <span className="font-mono text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">
+                        Roll #{rosterMatch.rollNo}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-2 border-t border-emerald-500/20">
+                      <StudentAvatar
+                        name={rosterMatch.name}
+                        rollNo={rosterMatch.rollNo}
+                        studentId={rosterMatch.studentId}
+                        size="md"
+                        className="rounded-xl shrink-0 ring-2 ring-emerald-500/40 shadow-md"
+                      />
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <p className="text-white text-sm font-bold truncate">{rosterMatch.name}</p>
+                        <p className="font-mono text-xs text-violet-300">ID: {rosterMatch.studentId}</p>
+                        <p className="text-[11px] text-slate-300 truncate">
+                          {rosterMatch.department} {rosterMatch.section ? `• Sec: ${rosterMatch.section}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 ) : rollNo.trim().length > 1 ? (
                   <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-                    <span>Will be registered for this classroom session</span>
+                    <span>Searching classroom roster for Roll #{rollNo.toUpperCase()}...</span>
                   </p>
                 ) : null}
               </div>

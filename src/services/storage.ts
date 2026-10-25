@@ -113,7 +113,15 @@ export const getStoredClassrooms = (): Classroom[] => {
             return { ...updated, studentCount: 25 };
           }
           if (cls.id === 'class-cse-3a') {
-            return { ...updated, year: '1st Year', name: 'B.Tech CSE - 1st Year - Section A', studentCount: 72 };
+            return {
+              ...updated,
+              year: '1st Year',
+              semester: '1st Semester',
+              name: 'B.Tech Computer Science and Engineering (Cyber Security)',
+              department: 'Computer Science and Engineering (Cyber Security)',
+              section: 'Cyber Security',
+              studentCount: 70,
+            };
           }
           if (cls.id === 'class-cse-3b') {
             return { ...updated, year: '1st Year', name: 'B.Tech CSE - 1st Year - Section B', studentCount: 72 };
@@ -148,100 +156,32 @@ export const getStoredStudents = (): Student[] => {
   if (memCache.students) return memCache.students;
   try {
     const raw = localStorage.getItem(KEYS.STUDENTS);
-    if (!raw) {
-      localStorage.setItem(KEYS.STUDENTS, JSON.stringify(mockStudents));
-      memCache.students = mockStudents;
-    } else {
-      let parsed: Student[] = JSON.parse(raw);
-      const cseCount = parsed.filter((s) => s.classroomId === 'class-cse-3a').length;
-      const beeCount = parsed.filter((s) => s.classroomId === 'class-cse-3b').length;
-      const phyCount = parsed.filter((s) => s.classroomId === 'class-phy-1a').length;
-      
-      let rosterUpdated = false;
-      if (cseCount < 72 || beeCount < 72 || phyCount < 60) {
-        parsed = mockStudents;
-        rosterUpdated = true;
-      }
+    let parsed: Student[] = raw ? JSON.parse(raw) : mockStudents;
 
-      // Reconcile student rosters: ensure continuous numbering so roll numbers match student count exactly
-      const classMap: Record<string, Student[]> = {};
-      parsed.forEach((s) => {
-        if (!classMap[s.classroomId]) classMap[s.classroomId] = [];
-        classMap[s.classroomId].push(s);
-      });
+    // Check Cyber Security classroom roster
+    const cseStudents = parsed.filter((s) => s.classroomId === 'class-cse-3a');
+    const hasCyberSecurity =
+      cseStudents.length === 70 &&
+      cseStudents.every((s) => s.rollNo.startsWith('26100') && s.avatarUrl?.includes('/cyber-students/'));
 
-      Object.entries(classMap).forEach(([cId, cStudents]) => {
-        // If students count is 71 but max roll number is 72, renumber so the 71 students have roll numbers 01 to 71
-        const numericRolls = cStudents
-          .map((s) => parseInt(s.rollNo.replace(/\D/g, ''), 10))
-          .filter((n) => !isNaN(n));
-        const maxRoll = Math.max(...numericRolls, 0);
-
-        if (cStudents.length === 71 && maxRoll === 72) {
-          cStudents.sort((a, b) => {
-            const na = parseInt(a.rollNo.replace(/\D/g, ''), 10) || 0;
-            const nb = parseInt(b.rollNo.replace(/\D/g, ''), 10) || 0;
-            return na - nb;
-          });
-          cStudents.forEach((std, idx) => {
-            const rollNum = idx + 1;
-            const rollStr = String(rollNum).padStart(2, '0');
-            std.rollNo = rollStr;
-            std.studentId = `ST${1000 + rollNum}`;
-            std.avatarUrl = `/student-portraits/student_${idx}.jpg`;
-          });
-          rosterUpdated = true;
-        }
-      });
-
-      // Ensure all students have authentic names and photographic JPG portraits
-      let needsSave = rosterUpdated;
-      const mockMap = new Map<string, Student>();
-      mockStudents.forEach((ms) => mockMap.set(ms.id, ms));
-
-      parsed = parsed.map((s, idx) => {
-        let updatedStudent = { ...s };
-        const mockMatch = mockMap.get(updatedStudent.id);
-
-        if (
-          updatedStudent.name.startsWith('Student CSE') ||
-          !updatedStudent.avatarUrl ||
-          updatedStudent.avatarUrl.endsWith('.svg') ||
-          updatedStudent.avatarUrl.includes('unsplash.com')
-        ) {
-          if (mockMatch) {
-            updatedStudent.name = mockMatch.name;
-            updatedStudent.avatarUrl = mockMatch.avatarUrl;
-            updatedStudent.email = mockMatch.email;
-          } else if (updatedStudent.classroomId === 'class-cse-3a') {
-            const rollIdx = (parseInt(updatedStudent.rollNo.replace(/\D/g, ''), 10) || (idx + 1)) - 1;
-            const safeIdx = Math.min(Math.max(rollIdx, 0), 71);
-            const fallbackStudent = mockStudents[safeIdx];
-            if (fallbackStudent) {
-              updatedStudent.name = fallbackStudent.name;
-              updatedStudent.avatarUrl = fallbackStudent.avatarUrl;
-              updatedStudent.email = fallbackStudent.email;
-            }
-          }
-          needsSave = true;
-        }
-
-        if (updatedStudent.semester?.includes('3rd Year')) {
-          updatedStudent.semester = updatedStudent.semester.replace(/3rd Year/g, '1st Year').replace(/5th Semester/g, '1st Semester').replace(/5th Sem/g, '1st Sem');
-          needsSave = true;
-        }
-        return updatedStudent;
-      });
-
-      if (needsSave) {
-        localStorage.setItem(KEYS.STUDENTS, JSON.stringify(parsed));
-      }
-      memCache.students = parsed;
+    let rosterUpdated = false;
+    if (!hasCyberSecurity) {
+      const otherStudents = parsed.filter((s) => s.classroomId !== 'class-cse-3a');
+      const cyberStudents = mockStudents.filter((s) => s.classroomId === 'class-cse-3a');
+      parsed = [...cyberStudents, ...otherStudents];
+      rosterUpdated = true;
     }
-  } catch {
+
+    if (rosterUpdated || !raw) {
+      localStorage.setItem(KEYS.STUDENTS, JSON.stringify(parsed));
+    }
+    memCache.students = parsed;
+    return parsed;
+  } catch (err) {
+    console.warn('Error reading stored students:', err);
     memCache.students = mockStudents;
+    return mockStudents;
   }
-  return memCache.students || mockStudents;
 };
 
 export const saveStudents = (students: Student[]) => {
@@ -731,7 +671,20 @@ export async function initStorageAsync(): Promise<void> {
     // 1. Classrooms
     const idbClasses = await dbGetClassrooms();
     if (idbClasses && idbClasses.length > 0) {
-      memCache.classrooms = idbClasses;
+      const refreshedClasses = idbClasses.map((cls) => {
+        if (cls.id === 'class-cse-3a') {
+          return {
+            ...cls,
+            name: 'B.Tech Computer Science and Engineering (Cyber Security)',
+            department: 'Computer Science and Engineering (Cyber Security)',
+            section: 'Cyber Security',
+            studentCount: 70,
+          };
+        }
+        return cls;
+      });
+      memCache.classrooms = refreshedClasses;
+      await dbSaveClassrooms(refreshedClasses).catch(() => {});
     } else {
       const initial = getStoredClassrooms();
       await dbSaveClassrooms(initial).catch(() => {});
@@ -740,13 +693,15 @@ export async function initStorageAsync(): Promise<void> {
     // 2. Students
     const idbStudents = await dbGetStudents();
     if (idbStudents && idbStudents.length > 0) {
-      const hasPlaceholders = idbStudents.some(
-        (s) => s.name?.startsWith('Student CSE') || s.avatarUrl?.endsWith('.svg')
-      );
-      if (hasPlaceholders) {
-        const freshStudents = getStoredStudents();
-        memCache.students = freshStudents;
-        await dbSaveStudents(freshStudents).catch(() => {});
+      const cseStudents = idbStudents.filter((s) => s.classroomId === 'class-cse-3a');
+      const hasCyberSecurity = cseStudents.length === 70 && cseStudents.every((s) => s.rollNo.startsWith('26100') && s.avatarUrl?.includes('/cyber-students/'));
+      if (!hasCyberSecurity) {
+        const otherStudents = idbStudents.filter((s) => s.classroomId !== 'class-cse-3a');
+        const cyberStudents = mockStudents.filter((s) => s.classroomId === 'class-cse-3a');
+        const combined = [...cyberStudents, ...otherStudents];
+        memCache.students = combined;
+        localStorage.setItem(KEYS.STUDENTS, JSON.stringify(combined));
+        await dbSaveStudents(combined).catch(() => {});
       } else {
         memCache.students = idbStudents;
       }

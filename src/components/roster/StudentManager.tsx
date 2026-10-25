@@ -447,7 +447,7 @@ export const StudentManager: React.FC<StudentManagerProps> = ({
     filteredStudents.every((s) => selectedIds.has(s.id));
 
   return (
-    <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 animate-fade-in overflow-x-hidden">
+    <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 animate-fade-in overflow-x-hidden w-full min-w-0 max-w-full">
       {/* Toast Notification Banner */}
       {notificationToast && (
         <div className="fixed top-16 right-4 sm:right-8 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-200 text-xs sm:text-sm font-semibold shadow-2xl backdrop-blur-md animate-fade-in">

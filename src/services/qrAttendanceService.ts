@@ -183,6 +183,7 @@ export async function createQRAttendanceSession(
         teacherName,
         rotationIntervalSeconds,
         date: dateStr,
+        enrolledStudents: getStoredStudents().filter((s) => s.classroomId === classroom.id),
       }),
     }, 1500);
 
@@ -371,6 +372,23 @@ export async function getActiveQRSession(
   if (sessionId) {
     try {
       const res = await fetch(`/api/qr-session/${sessionId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.session) {
+          const s = data.session;
+          return {
+            ...s,
+            submissions: s.submissions || {},
+            scannedStudents: s.submissions || {},
+            totalSubmissions: s.totalSubmissions || 0,
+            totalScanned: s.totalSubmissions || 0,
+          };
+        }
+      }
+    } catch {}
+  } else if (classroomId) {
+    try {
+      const res = await fetch(`/api/qr-session/active/${classroomId}`);
       if (res.ok) {
         const data = await res.json();
         if (data.session) {

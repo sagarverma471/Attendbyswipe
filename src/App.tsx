@@ -713,7 +713,7 @@ export default function App() {
     <ToastProvider>
       <OfflineToastWatcher />
       <RetroCRTScreen>
-        <div className="min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
+        <div className="min-h-screen w-full max-w-full min-w-0 bg-[#0B0F19] text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif] overflow-x-hidden">
         {/* Top Navigation Bar */}
         <Navbar
         currentRole={role}
@@ -742,7 +742,7 @@ export default function App() {
       />
 
       {/* Main Content View Switcher */}
-      <main className="flex-1 flex flex-col min-w-0 w-full overflow-x-hidden">
+      <main className="flex-1 flex flex-col min-w-0 w-full max-w-full overflow-x-hidden">
         <Suspense fallback={<ViewLoadingFallback />}>
           {activeView === 'dashboard' && (
             <TeacherDashboard

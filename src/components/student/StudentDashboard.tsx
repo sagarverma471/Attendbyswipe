@@ -226,7 +226,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   // =========================================================================
   if (!student) {
     return (
-      <div className="max-w-6xl mx-auto py-3 sm:py-5 px-3 sm:px-6 lg:px-8 space-y-4 animate-fade-in">
+      <div className="max-w-6xl mx-auto py-3 sm:py-5 px-3 sm:px-6 lg:px-8 space-y-4 animate-fade-in w-full min-w-0 max-w-full overflow-x-hidden">
         {/* Compact, Clean Student Search Bar */}
         <div className="bg-[#121826] border border-slate-800 rounded-xl p-2 sm:p-2.5 shadow-sm">
           {/* Search Input Row */}
@@ -407,7 +407,7 @@ export const StudentDashboard: React.FC<StudentDashboardProps> = ({
   // VIEW B: STUDENT SELECTED — SHOW INDIVIDUAL ATTENDANCE DASHBOARD
   // =========================================================================
   return (
-    <div className="max-w-6xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-5 sm:space-y-6 animate-fade-in overflow-x-hidden">
+    <div className="max-w-6xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-5 sm:space-y-6 animate-fade-in overflow-x-hidden w-full min-w-0 max-w-full">
       {/* =========================================================================
           PROMINENT TOP SEARCH BAR & DIRECTORY SWITCHER
           ========================================================================= */}

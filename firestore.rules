@@ -27,28 +27,28 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
     }
 
-    // Classrooms
+    // Classrooms (allow read for roster display & write for sync)
     match /classrooms/{classroomId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn() && isValidId(classroomId);
+      allow read: if true;
+      allow write: if isValidId(classroomId);
     }
 
-    // Students
+    // Students (allow read for roll lookups & write for sync)
     match /students/{studentId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn() && isValidId(studentId);
+      allow read: if true;
+      allow write: if isValidId(studentId);
     }
 
     // Subjects
     match /subjects/{subjectId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn() && isValidId(subjectId);
+      allow read: if true;
+      allow write: if isValidId(subjectId);
     }
 
-    // Attendance Sessions
+    // Attendance Sessions (allow read & write for session archiving)
     match /attendance_sessions/{sessionId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn() && isValidId(sessionId);
+      allow read: if true;
+      allow write: if isValidId(sessionId);
     }
 
     // Live QR Attendance Sessions (rotating tokens & student submissions)

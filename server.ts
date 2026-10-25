@@ -361,6 +361,16 @@ interface ServerQRSubmission {
   teacherNotes?: string;
 }
 
+let cyberSecurityStudents: any[] = [];
+try {
+  const jsonPath = path.resolve('src/data/cyberSecurityStudents.json');
+  if (fs.existsSync(jsonPath)) {
+    cyberSecurityStudents = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+  }
+} catch (e) {
+  console.warn('Could not preload cyberSecurityStudents.json in server.ts', e);
+}
+
 interface ServerQRSession {
   id: string;
   classroomId: string;
@@ -383,6 +393,7 @@ interface ServerQRSession {
   finalizedAt?: string;
   submissions: Record<string, ServerQRSubmission>;
   totalSubmissions: number;
+  roster?: any[];
   auditTrail: Array<{
     timestamp: string;
     action: string;
@@ -422,6 +433,7 @@ app.post('/api/qr-session/create', (req, res) => {
       teacherName = 'Prof. Teacher',
       rotationIntervalSeconds = 25,
       date = new Date().toISOString().split('T')[0],
+      enrolledStudents,
     } = req.body;
 
     if (!classroomId || !classroomName) {
@@ -434,6 +446,10 @@ app.post('/api/qr-session/create', (req, res) => {
     const expiresAt = new Date(now.getTime() + 60 * 60 * 1000).toISOString(); // 1 hour session lifetime
 
     const initialToken = generateTokenString();
+
+    const resolvedRoster = Array.isArray(enrolledStudents) && enrolledStudents.length > 0
+      ? enrolledStudents
+      : (classroomId === 'class-cse-3a' ? cyberSecurityStudents : []);
 
     const newSession: ServerQRSession = {
       id: sessionId,
@@ -456,6 +472,7 @@ app.post('/api/qr-session/create', (req, res) => {
       expiresAt,
       submissions: {},
       totalSubmissions: 0,
+      roster: resolvedRoster,
       auditTrail: [
         {
           timestamp: now.toISOString(),
@@ -483,7 +500,47 @@ app.get('/api/qr-session/:sessionId', (req, res) => {
     return res.status(404).json({ error: 'QR Session not found' });
   }
 
+  if (!session.roster || session.roster.length === 0) {
+    session.roster = session.classroomId === 'class-cse-3a' ? cyberSecurityStudents : [];
+  }
+
   return res.json({ success: true, session });
+});
+
+// 2c. Get Active QR Session by Classroom ID
+app.get('/api/qr-session/active/:classroomId', (req, res) => {
+  const { classroomId } = req.params;
+  for (const session of qrSessionsStore.values()) {
+    if (
+      session.classroomId === classroomId &&
+      session.status !== 'closed' &&
+      session.status !== 'finalized'
+    ) {
+      if (!session.roster || session.roster.length === 0) {
+        session.roster = session.classroomId === 'class-cse-3a' ? cyberSecurityStudents : [];
+      }
+      return res.json({ success: true, session });
+    }
+  }
+  return res.status(404).json({ error: 'No active QR session found for this classroom' });
+});
+
+// 2b. Get Session Classroom Student Roster
+app.get('/api/qr-session/:sessionId/roster', (req, res) => {
+  const { sessionId } = req.params;
+  const session = qrSessionsStore.get(sessionId);
+
+  const roster = session?.roster && session.roster.length > 0
+    ? session.roster
+    : cyberSecurityStudents;
+
+  return res.json({
+    success: true,
+    sessionId,
+    classroomId: session?.classroomId || 'class-cse-3a',
+    roster,
+    total: roster.length,
+  });
 });
 
 // 3. Rotate Temporary Token
@@ -625,9 +682,11 @@ app.post('/api/qr-session/:sessionId/submit', (req, res) => {
     }
 
     // Match against official classroom student roster
-    let matchedStudent = Array.isArray(rosterStudents)
-      ? rosterStudents.find((s: any) => normalizeRollNumber(s.rollNo) === normRoll)
-      : null;
+    const effectiveRoster = Array.isArray(rosterStudents) && rosterStudents.length > 0
+      ? rosterStudents
+      : (session.roster && session.roster.length > 0 ? session.roster : cyberSecurityStudents);
+
+    let matchedStudent = effectiveRoster.find((s: any) => normalizeRollNumber(s.rollNo) === normRoll);
 
     let verificationStatus: ServerQRSubmission['verificationStatus'] = 'verified';
     let isRosterMatch = false;

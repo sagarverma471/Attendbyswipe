@@ -319,7 +319,7 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 animate-fade-in overflow-x-hidden">
+    <div className="max-w-6xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 animate-fade-in overflow-x-hidden w-full min-w-0 max-w-full">
       {/* Toast Notification */}
       {notification && (
         <div className="fixed bottom-5 right-5 z-50 bg-[#141A2E] border border-cyan-500/40 text-cyan-200 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs animate-slide-up">
@@ -695,20 +695,20 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
           {/* Controls Bar: Filter Toggle & Search */}
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             {/* Filter Toggle to Separate QR Sessions from Traditional Swipe Sessions */}
-            <div className="flex items-center bg-[#0C1226] p-1.5 rounded-2xl border border-slate-700/80 shadow-md self-start w-full sm:w-auto gap-1">
+            <div className="flex items-center bg-[#0C1226] p-1.5 rounded-2xl border border-slate-700/80 shadow-md self-start w-full sm:w-auto gap-1 overflow-x-auto max-w-full">
               {/* All Sessions Tab */}
               <button
                 onClick={() => setFilterType('all')}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   filterType === 'all'
                     ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-md border border-violet-400/50'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
                 }`}
               >
-                <Layers className="w-3.5 h-3.5" />
-                <span>All Sessions</span>
+                <Layers className="w-3.5 h-3.5 shrink-0" />
+                <span>All<span className="hidden xs:inline"> Sessions</span></span>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                  className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
                     filterType === 'all' ? 'bg-violet-900/90 text-white border border-violet-400/40' : 'bg-slate-800 text-slate-300'
                   }`}
                 >
@@ -719,16 +719,16 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
               {/* Digital (QR) Tab */}
               <button
                 onClick={() => setFilterType('qr')}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   filterType === 'qr'
                     ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white shadow-md border border-cyan-400/50'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
                 }`}
               >
-                <QrCode className="w-3.5 h-3.5" />
-                <span>Digital (QR)</span>
+                <QrCode className="w-3.5 h-3.5 shrink-0" />
+                <span>Digital<span className="hidden xs:inline"> (QR)</span></span>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                  className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
                     filterType === 'qr' ? 'bg-cyan-900/90 text-white border border-cyan-400/40' : 'bg-slate-800 text-cyan-300'
                   }`}
                 >
@@ -739,16 +739,16 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
               {/* Traditional Swipe Tab */}
               <button
                 onClick={() => setFilterType('swipe')}
-                className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   filterType === 'swipe'
                     ? 'bg-slate-700 text-white shadow-md border border-slate-500'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
                 }`}
               >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>Traditional Swipe</span>
+                <Smartphone className="w-3.5 h-3.5 shrink-0" />
+                <span><span className="hidden xs:inline">Traditional </span>Swipe</span>
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                  className={`px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
                     filterType === 'swipe' ? 'bg-slate-900 text-white' : 'bg-slate-800 text-slate-300'
                   }`}
                 >
@@ -856,12 +856,12 @@ export const AttendanceHistoryView: React.FC<AttendanceHistoryViewProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between sm:justify-end gap-3 font-mono text-xs w-full sm:w-auto pt-2.5 sm:pt-0 border-t sm:border-t-0 border-white/5">
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
+                    <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 font-mono text-xs w-full sm:w-auto pt-2.5 sm:pt-0 border-t sm:border-t-0 border-white/5">
+                      <div className="flex items-center gap-1.5 sm:gap-2.5 flex-wrap">
+                        <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20 text-[11px] sm:text-xs">
                           {sess.presentCount} Present
                         </span>
-                        <span className="text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded-lg border border-red-500/20">
+                        <span className="text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded-lg border border-red-500/20 text-[11px] sm:text-xs">
                           {sess.absentCount} Absent
                         </span>
                       </div>

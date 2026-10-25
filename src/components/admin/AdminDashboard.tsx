@@ -34,7 +34,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   ];
 
   return (
-    <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-5 sm:space-y-7 animate-fade-in overflow-x-hidden">
+    <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-5 sm:space-y-7 animate-fade-in overflow-x-hidden w-full min-w-0 max-w-full">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>

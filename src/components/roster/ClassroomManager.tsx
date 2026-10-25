@@ -74,7 +74,7 @@ export const ClassroomManager: React.FC<ClassroomManagerProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 animate-fade-in overflow-x-hidden">
+    <div className="max-w-7xl mx-auto py-4 sm:py-6 lg:py-8 px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-6 animate-fade-in overflow-x-hidden w-full min-w-0 max-w-full">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white font-['Plus_Jakarta_Sans'] tracking-tight">

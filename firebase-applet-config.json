@@ -3,6 +3,7 @@
   "appId": "1:434038080889:web:be261a37ea5248b8345ba8",
   "apiKey": "AIzaSyCw5_biGmuQwVrAzvVPTETBzBeXuz2_bjo",
   "authDomain": "swipeattendance.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-swipeattend-55ab141e-2813-4ce9-be5f-7979e9656526",
   "storageBucket": "swipeattendance.firebasestorage.app",
   "messagingSenderId": "434038080889",
   "measurementId": "",

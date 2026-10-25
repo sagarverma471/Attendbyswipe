@@ -33,6 +33,7 @@ import {
   TrendingDown,
   Download,
 } from 'lucide-react';
+import { LoginModal } from './auth/LoginModal';
 
 interface NavbarProps {
   currentRole: Role;
@@ -80,6 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   subjects = EMPTY_SUBJECTS,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [isOfflineModalOpen, setIsOfflineModalOpen] = useState(false);
   const [offlineStatus, setOfflineStatus] = useState<OfflineSyncStatus>(getCurrentSyncStatus());
@@ -193,7 +195,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   <span className="text-base sm:text-lg font-bold tracking-tight text-white font-['Plus_Jakarta_Sans'] whitespace-nowrap">
                     Swipe<span className="text-violet-400">Attend</span>
                   </span>
-                  <span className="text-[10px] font-semibold text-slate-400 border border-slate-800 px-2 py-0.5 rounded-full bg-slate-900">
+                  <span className="hidden sm:inline-block text-[10px] font-semibold text-slate-400 border border-slate-800 px-2 py-0.5 rounded-full bg-slate-900">
                     BIT Sindri
                   </span>
                 </div>
@@ -303,10 +305,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           />
 
           {/* Drawer Panel */}
-          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
             <div
               ref={drawerRef}
-              className="w-screen max-w-md bg-[#0D1322] border-l border-white/10 shadow-2xl flex flex-col text-slate-100 animate-in slide-in-from-right duration-250 ease-out"
+              className="w-full max-w-md bg-[#0D1322] border-l border-white/10 shadow-2xl flex flex-col text-slate-100 animate-in slide-in-from-right duration-250 ease-out"
               role="dialog"
               aria-modal="true"
               aria-label="SwipeAttend Navigation Menu"
@@ -772,13 +774,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                       </p>
                       <button
                         onClick={() => {
-                          onSignInGoogle();
+                          setIsLoginModalOpen(true);
                           setIsMenuOpen(false);
                         }}
                         className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold shadow-md shadow-violet-600/30 transition-all cursor-pointer"
                       >
                         <LogIn className="w-4 h-4" />
-                        <span>Sign in with Google</span>
+                        <span>Sign in (Google or Faculty)</span>
                       </button>
                     </div>
                   )}
@@ -795,6 +797,16 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
       )}
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onLoginSuccess={(u) => {
+          if (u) onSignInGoogle();
+        }}
+        currentUser={firebaseUser}
+      />
 
       {/* Full App Download & PWA Install Modal */}
       <DownloadAppModal
